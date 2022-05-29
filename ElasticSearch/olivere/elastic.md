@@ -1,11 +1,3 @@
----
-# 主题列表：juejin, github, smartblue, cyanosis, channing-cyan, fancy
-# 贡献主题：https://github.com/xitu/juejin-markdown-themes
-theme: juejin
-highlight: juejin
----
-
-
 
 #### 前言
 最近笔者接到了公司内部的ES团队的通知，需要将自己应用的数据从ES5搬迁到ES7。我在维护一个基于Golang语言开发的项目，遇到了一些关于ES 的Golang Client [https://github.com/olivere/elastic](https://github.com/olivere/elastic) 的问题，特此写这篇博客记录一下。
