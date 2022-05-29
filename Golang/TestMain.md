@@ -4,12 +4,12 @@
 
 TestMain 是在跟随 Go 1.4 一起发布的功能，本文将对其进行讲解。
 
-**TestMain 函数到底是什么？**
+**What is TestMain function exactly?**
 --------------------------------------
 
 No, it is not to test the main function on your program. Basically the TestMain function provides more control over running tests than was available in the prior releases of Go. So if the test code contains a function:
 
-首先，它并不是用来测试你的程序的`Main`函数。和之前的Golang版本相比，TestMain 函数整体上为测试提供了对的更多可控制性。
+首先，它并不是用来测试你的程序的`Main`函数。和之前的Golang版本相比，TestMain 函数整体上为测试提供了更多控制。
 
 ```
 func TestMain(m *testing.M)
@@ -23,14 +23,14 @@ that function will be called instead of running the tests directly. The M struct
 4.  A minimal implementation looks like this: `func TestMain(m *testing.M) { os.Exit(m.Run()) }`.
 5.  If you don't call `os.Exit` with the return code, your test command will return 0(zero). Yes, even if a test fails.
 
-如果测试代码包含一个TestMain函数，那么该函数将被其他函数调用而不是直接运行。Struct M 包含了访问和运行测试的方法。但是当使用TestMain试，需要注意一下几点
+如果测试代码包含一个TestMain函数，那么该函数将被其他函数调用而不是直接运行。Struct M 包含了访问和运行测试的方法。但是当使用TestMain时，需要注意以下几点：
 1.  您可以在测试文件中定义此函数： `func TestMain(m *testing.M)`.
-1.  由于在给定包中函数的名称必须是唯一，因此您只能在每个包中定义一次`TestMain`。如果您的包下面有多个测试文件，必须为 `TestMain` 函数选择一个合适的位置.
-1.  Struct `testing.M` 有一个名为 `Run()` 的函数，它将运行包中的所有测试案例， 同时`Run()` 返回一个可以传递给 `os.Exit` 的退出代码.
-1.  `func TestMain(m *testing.M)`一个最简单的实现像这样: `func TestMain(m *testing.M) { os.Exit(m.Run()) }`.
-1.  如果在return的时候不调用 `os.Exit`，测试结果将返回 0（零），在测试失败也是如此。
+2.  由于在给定包中函数的名称必须是唯一，因此您只能在每个包中定义一次`TestMain`。如果您的包下面有多个测试文件，必须为 `TestMain` 函数选择一个合适的位置.
+3.  Struct `testing.M` 有一个名为 `Run()` 的函数，它将运行包中的所有测试案例， 同时`Run()` 返回一个可以传递给 `os.Exit` 的退出代码.
+4.  `func TestMain(m *testing.M)`一个最简单的实现像这样: `func TestMain(m *testing.M) { os.Exit(m.Run()) }`.
+5.  如果在return的时候不调用 `os.Exit`，测试结果将返回 0（零），在测试失败也是如此。
 
-例子:
+Here is an example:
 -------------------
 
 ```
@@ -74,7 +74,7 @@ So this may come in handy when you need to do some global set-up/tear-down for y
 
 As already mentioned, adding a `TestMain` to a package allows it to run arbitrary code before and after tests run. But only the second part is really new. Running global test setup has always been possible by defining an `init()` function in a test file. The challenge has been aligning that with corresponding shutdown code when all tests have completed.
 
-如前所述，`TestMain`允许在测试运行之前和测试结束后运行相应的代码。但其实这些也可以通过其他的方式实现，通过在测试文件中定义 `init()` 函数也可以实现相应的功能，但是需要在所有测试完成后将其与相应的资源的释放。
+如前所述，`TestMain`允许在测试运行之前和测试结束后运行相应的代码，通过在测试文件中定义 `init()` 函数也可以实现相应的功能，但是需要在所有测试完成后依次将相应的资源释放。
 
 How about we do a more complex example then that?
 -------------------------------------------------
@@ -102,7 +102,7 @@ func TestDBFeatureB(t *testing.T) {
 
 As you can see in every single test which utilized the DB had to go through the same process of setup and exiting and as the testing suite grow, the time it took to run tests grew linearly.
 
-正如在每个使用数据库的测试中看到的那样，必须在每一个测试案例中进行相同的设置和退出过程，并且随着测试套件的叠加，因为在每一个测试用例之前都需要上面的过程，运行测试所需的时间会线性增长。
+正如在上面的测试中看到的那样，必须在每一个测试案例中进行相同的Setup和Exit，并且随着测试suite的叠加，由于在每一个测试用例之前都需要上面的过程，运行测试所需的时间会线性增长。
 
 Now it comes `TestMain()` to the rescue making it possible to run these migrations only once. So now the code would look more like this:
 
