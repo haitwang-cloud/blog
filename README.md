@@ -11,4 +11,5 @@
 * [go.mod 文件中的Direct和Indirect依赖](./Golang/direct-indirect-dependency-module-go.md) 
 
 ### Software Development
-* [软件开发中的上游和下游](./Software%20Development/Upstream%3Adownstream/upstream-downstream.md)
+* [软件开发中的上游和下游](./SoftwareEngineering/Upstream%3Adownstream/upstream-downstream.md)
+* [JSON Patch and JSON Merge Patch](./SoftwareEngineering/json-patch-vs-merge-patch.md)
