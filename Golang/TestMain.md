@@ -1,5 +1,5 @@
 > [Why use TestMain for testing in Go?
-](https://medium.com/goingogo/why-use-testmain-for-testing-in-go-dafb52b406bc)的中文翻译版本。
+](https://medium.com/goingogo/why-use-testmain-for-testing-in-go-dafb52b406bc)  的中文翻译版本。
 
 
 TestMain 是在跟随 Go 1.4 一起发布的功能，本文将对其进行讲解。

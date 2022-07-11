@@ -9,6 +9,7 @@
 * [3 ways to compare slices (arrays)](./Golang/compare-slice.md)
 * [The Go init Function](./Golang/the-golang-init-func.md)
 * [go.mod 文件中的Direct和Indirect依赖](./Golang/direct-indirect-dependency-module-go.md) 
+* [Go’s sync.Map](./Golang/Go’s-sync-Map.md)
 
 ### Software Development
 * [软件开发中的上游和下游](./SoftwareEngineering/Upstream%3Adownstream/upstream-downstream.md)
