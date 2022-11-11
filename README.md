@@ -16,3 +16,4 @@
 ### Software Development
 * [软件开发中的上游和下游](./SoftwareEngineering/Upstream%3Adownstream/upstream-downstream.md)
 * [JSON Patch and JSON Merge Patch](./SoftwareEngineering/json-patch-vs-merge-patch.md)
+* [How To Build Docker Images For Apple Silicon (Aka M1 Chip)](./SoftwareEngineering/docker-build-on-m1-mac.md)

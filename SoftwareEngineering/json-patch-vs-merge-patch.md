@@ -1,5 +1,5 @@
 
->  [JSON Patch and JSON Merge Patch](https://erosb.github.io/post/json-patch-vs-merge-patch/)的中文翻译版本。
+>  [JSON Patch and JSON Merge Patch](https://erosb.github.io/post/json-patch-vs-merge-patch/) 的中文翻译版本。
 
 Partly as a side effect of the `PATCH` HTTP verb gaining attention in the recent years, people started to come up with ideas about representing JSON-driven PATCH formats which declaratively describe differences between two JSON documents. The number or home-grew solutions is probably countless, two formats have been published by IETF as RFC documents to solve this problem: [RFC 6902 (JSON Patch)](https://tools.ietf.org/html/rfc6902) and [RFC 7396 (JSON Merge Patch)](https://tools.ietf.org/html/rfc7386). Both have advantages and disadvantages, and none of them will fit everybody’s usecases, so lets have a quick look at which one to use.
 
