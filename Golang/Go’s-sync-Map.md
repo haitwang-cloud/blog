@@ -2,7 +2,8 @@
 
 
 Here’s an example of a builtin `map` that has been wrapped in a similar API as that of the `sync.Map`
-这是一个使用内置 `map` 的例子，它被包装在与 `sync.Map` 类似的 API 中
+
+本文是一个使用内置 `map` 的例子，它在 `sync.Map` 包中
 
 ```
 package RegularIntMap
@@ -40,26 +41,29 @@ func (rm *RegularIntMap) Store(key, value int) {
 
 > RegularIntMap wraps the built-in map which is protected by a RWMutex and has a similar API to the sync.Map.
 
-> RegularIntMap 包装了由 RWMutex 保护的内置map，并具有与 sync.Map 类似的 API。
+> RegularIntMap 采用了由 RWMutex 保护的内置map，与 sync.Map 类似的 API。
 
 Notice in the code above that `Load` is the only receiver method that does not mutate the state of the internal `map`. This is important because now `Load` is free to take a read-lock now affording concurrent progress to those goroutines that are executing this method.
 
-请注意在上面的代码中，`Load`  是唯一不会改变内部映射状态的接收器方法。 这很重要，因为 `Load`  可以自由地获取读锁，为正在执行此方法的那些 goroutines 提供并发进度。
+在上面的代码中，`Load`  是唯一不会改变内部映射状态的接收器方法。 这很重要，因为 `Load`  可以自由地获取读锁，为正在执行此方法的那些 goroutines 提供并发进度。
 
 
 That was until under additional scrutiny and performance analysis of the standard lib, that various members of the Go team discovered less than ideal performance when a `sync.RWMutex` was utilized in systems that were deployed on many, many cores. And by many I’m not really talking about your typical 8 or 16 core setup but primarily those server setups that are well beyond that. Where the number of cores really starts to show in the form of highly contentious code such as when the `sync.RWMutex` is used.
 
-直到对标准库进行额外的审查和性能分析后，Go 团队的各个成员才发现，当在多核上的系统中使用“sync.RWMutex”时，性能并不理想。 这里指的并不是典型的 8 核或 16 核设置，而是那些远远超出此范围的服务器设置。 核心数量真正开始以高度有争议的代码形式出现，例如使用 `sync.RWMutex` 时。
+直到对标准库进行额外的审查和性能分析后，Go 团队的各个成员才发现，当在多核系统中使用`sync.RWMutex`时，性能并不理想。这里指的并不是 8 核或 16 核设置，而是那些远远超出此范围的服务器设置。此时内核数量真正开始以高度争议的代码形式显示的地方，在此时使用`sync.RWMutex`。
 
 And now we’ve arrived as to why the `sync.Map` was created. The Go team identified situations in the standard lib where performance wasn’t great. There were cases where items were fetched from data structures wrapped in a `sync.RWMutex`, under high read scenarios while deployed on very high multi-core setups and performance suffered considerably.
 
-现在我们已经了解了为什么要创建 `sync.Map`。 Go 团队发现了标准库中性能不佳的情况。在某些情况下，项目是从包装在“sync.RWMutex”中的数据结构中获取的，在高读取场景下，如果项目此时恰巧部署在多核服务器上，性能会受到很大影响。
+现在我们已经了解了为什么要创建 `sync.Map`。 Go 团队发现了标准库中性能不佳的情况。在某些情况下，项目是从`sync.RWMutex`中的数据结构中获取的，在高读取场景下，如果项目此时恰巧部署在多核服务器上，性能会受到很大影响。
 
 In fact, there’s a quite nice story about it here that was done as a lightning talk at the **2017 GopherCon**: [An overview of sync.Map](https://www.youtube.com/watch?v=C1EtfDnsdDs). If you’re considering using the implementation please watch this talk as there are some possible performance traps with it. Also, this talk while short definitely goes much more in-depth of why this was created and where it was designed to shine.
 
-事实上，在 **2017 GopherCon** 上，有一个关于它的精彩故事：[Sync.Map 概述](https://www.youtube.com/watch?v= C1EtfDnsdDs）。 如果您正在考虑使用该实现，请观看此演讲，因为它可能存在一些性能陷阱。 此外，这次简短的演讲肯定会更深入地说明为什么要创建它以及它的设计目的。
+事实上，在 **2017 GopherCon** 上，有一个关于它的精彩故事：[An overview of sync.Map](https://www.youtube.com/watch?v=C1EtfDnsdDs)。 如果您正在考虑使用该实现，请观看此演讲，因为它可能存在一些性能陷阱。 此外，这次简短的演讲肯定会更深入地说明为什么要创建它以及它的设计目的。
 
 Let’s examine the usage of the `sync.Map` in the following code:
+
+让我们来看看下面的代码中查看`sync.Map`的用法：
+
 ```
 func syncMapUsage() {
 	fmt.Println("sync.Map test (Go 1.9+ only)")
@@ -88,15 +92,14 @@ func syncMapUsage() {
 
 	fmt.Println("---------------------------")
 }
-view raw
 ```
 Notice that the API is clearly different from the regular built-in `map` usage. Additionally, because this implementation of the map is not type-safe when we fetch (`Load`) an item from the map we must do a type conversion…which may succeed or fail. Be careful.
 
-请注意，该 API 明显不同于常规的内置 `map` 用法。 此外，因为sync.Map的这种实现不是类型安全的, 当我们从sync.Map中获取（`Load`）项目时，所以我们必须进行类型转换，请注意这可能成功也可能失败。。
+请注意，该 API 明显不同于常规的内置 `map` 用法。 此外，因为sync.Map的这种实现不是类型安全的, 当我们从sync.Map中获取（`Load`）项目时，所以我们必须进行类型转换，请注意此时可能会失败。
 
 In addition to `Load` and `Store` we also have methods for `Delete, LoadOrStore` and finally `Range` which was mentioned earlier. It is an exercise for the reader to understand the usage of those methods in detail.
 
-除了`Load`和`Store`，还有前面提到的[Delete](https://pkg.go.dev/sync#Map.Delete)、[LoadOrStore](https://pkg.go.dev/sync#Map.LoadOrStore)和最后[Range](https://pkg.go.dev/sync#Map.Range)的方法。 读者可以参考golang的文档[https://pkg.go.dev/sync#Map](https://pkg.go.dev/sync#Map)。
+除了`Load`和`Store`，还有前面提到的[Delete](https://pkg.go.dev/sync#Map.Delete)、[LoadOrStore](https://pkg.go.dev/sync#Map.LoadOrStore)和最后[Range](https://pkg.go.dev/sync#Map.Range)的方法。可以参考golang的文档[https://pkg.go.dev/sync#Map](https://pkg.go.dev/sync#Map)。
 
 > So how does the `sync.Map` perform?
 
@@ -109,11 +112,11 @@ The documentation on the performance characteristics are as stated below:
 
 > It is optimized for use in **concurrent loops** with keys that are **stable over time**, and either few **steady-state stores**, or stores **localized to one goroutine per key**.
 
+> 它针对在**并发循环**进行了优化，键**随时间稳定**，以及少数**稳态存储**，或存储**本地化到每个键一个goroutine**。
+
 > For use cases that do not share these attributes, **it will likely have comparable or worse performance** and worse type safety than an ordinary map paired with a read-write mutex.
 
-> 它针对在**并发循环**中使用进行了优化，键**随时间稳定**，以及少数**稳态存储**，或存储**本地化到每个键一个goroutine**。
-
-> 对于不共享这些属性的用例，与读写互斥锁配对的普通映射相比，它可能具有可比或更差的性能和更差的类型安全性。
+> 对于不共享这些属性的用例，与读写互斥锁配对的普通映射相比，它可能具有更差的性能和类型安全性。
 
 ![](https://miro.medium.com/max/850/1*g0W-pAa00oXaRqo8tAlPDg.png)
 
@@ -156,6 +159,7 @@ BenchmarkStoreSync-32                   	 1000000	      1146 ns/op
 ```
 
 Next we show a benchmark of `Delete` operations.
+
 接下来是关于 `Delete` 操作的基准测试。
 
 
