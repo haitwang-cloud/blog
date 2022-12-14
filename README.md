@@ -24,3 +24,6 @@
 * [JSON Patch and JSON Merge Patch](./SoftwareEngineering/json-patch-vs-merge-patch.md)
 * [Just in Time Compilation](./SoftwareEngineering/just-in-time-compilation-explained.md)
 * [How To Build Docker Images For Apple Silicon (Aka M1 Chip)](./SoftwareEngineering/docker-build-on-m1-mac.md)
+
+### Kubernetes
+* [K3s Vs K8s: What’s The Difference? (And When To Use Each)](./kubernetes/k8s-vs-k3s.md)
