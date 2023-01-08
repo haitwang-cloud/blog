@@ -2,14 +2,12 @@
 
 
 
-Basic case
+### 基本案例(Basic case）
 ----------
-
-In most cases, you will want to write your own code to compare the elements of two [**slices**](https://yourbasic.org/golang/slices-explained/).
 
 在大多数情况下，你需要自己实现比较两个 [**slices**](https://yourbasic.org/golang/slices-explained/) 的代码
 
-```
+```Golang
 // Equal tells whether a and b contain the same elements.
 // A nil argument is equivalent to an empty slice.
 func Equal(a, b []int) bool {
@@ -25,8 +23,6 @@ func Equal(a, b []int) bool {
 }
 ```
 
-For [**arrays**](https://yourbasic.org/golang/slices-explained/), however, you can use the comparison operators `==` and `!=`.
-
 对于  [**arrays**](https://yourbasic.org/golang/slices-explained/)来说，你可以使用  `==` 或者`!=`
 
 ```
@@ -35,23 +31,16 @@ b := [2]int{1, 3}
 fmt.Println(a == b) // false
 ```
 
-> Array values are comparable if values of the array element type are comparable. Two array values are equal if their corresponding elements are equal. 
-[The Go Programming Language Specification: Comparison operators](https://golang.org/ref/spec#Comparison_operators)
-
 >只有在数组的元素类型的值是可比较的时候，才可以使用 `==`和`!=`。如果它们的对应元素相等，则两个数组值相等。
 [The Go Programming Language Specification: Comparison operators](https://golang.org/ref/spec#Comparison_operators)
 
-Optimized code for byte slices
+### 对slices优化的代码(Optimized code for byte slices）
 ------------------------------
-
-To compare byte slices, use the optimized [`bytes.Equal`](https://golang.org/pkg/bytes/#Equal). This function also treats nil arguments as equivalent to empty slices.
 
 如果是为了比较byte slices，可以使用优化过的方法 [`bytes.Equal`](https://golang.org/pkg/bytes/#Equal)。此函数会将 nil 视为等效于空切片。
 
-General-purpose code for recursive comparison
+### 用于递归比较的通用代码(General-purpose code for recursive comparison)
 ---------------------------------------------
-
-For testing purposes, you may want to use [`reflect.DeepEqual`](https://golang.org/pkg/reflect/#DeepEqual). It compares two elements of any type recursively.
 
 当在测试的时候，您可能需要使用 [`reflect.DeepEqual`](https://golang.org/pkg/reflect/#DeepEqual)，它会递归地比较任何类型的两个元素。
 
@@ -60,8 +49,6 @@ var a []int = nil
 var b []int = make([]int, 0)
 fmt.Println(reflect.DeepEqual(a, b)) // false
 ```
-
-The performance of this function is much worse than for the code above, but it’s useful in test cases where simplicity and correctness are crucial. The semantics, however, are quite complicated.
 
 这个函数的性能比上面的代码差很多，但它在简单性和正确性至关重要的测试用例中很有用。然而，这样做的代码语法会变得相当复杂。
 
