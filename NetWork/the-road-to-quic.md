@@ -1,197 +1,136 @@
 >  本文是 [the-road-to-quic](https://blog.cloudflare.com/the-road-to-quic/) 的中文翻译版本，内容有删减。
 
-QUIC (Quick UDP Internet Connections) is a new encrypted-by-default Internet transport protocol, that provides a number of improvements designed to accelerate HTTP traffic as well as make it more secure, with the intended goal of eventually replacing TCP and TLS on the web. In this blog post we are going to outline some of the key features of QUIC and how they benefit the web, and also some of the challenges of supporting this radical new protocol.
-
 QUIC（快速 UDP Internet 连接）是一种新式使用默认加密的 Internet 传输协议，它提供了许多旨在加速 HTTP 流量并使其更安全的改进，其最终目前是最终取代 TCP 和 TLS 。在这篇博文中，我们将概述QUIC的一些关键功能以及它们如何使网络受益，与此同时还有这种激进新协议带来的一些挑战。
 
 
 ![][img-1]
 
-There are in fact two protocols that share the same name: “Google QUIC” (“gQUIC” for short), is the original protocol that was designed by Google engineers several years ago, which, after years of experimentation, has now been adopted by the [IETF](https://ietf.org/) (Internet Engineering Task Force) for standardization.
 
 事实上，有两个协议共享：“Google QUIC”（简称“gQUIC”）这个名称。它是谷歌工程师几年前设计的原始协议，经过多年的实验，现在已经被 [IETF](https://ietf.org/)（互联网工程任务组）采用并进行标准化。
 
 
-“IETF QUIC” (just “QUIC” from now on) has already diverged from gQUIC quite significantly such that it can be considered a separate protocol. From the wire format of the packets, to the handshake and the mapping of HTTP, QUIC has improved the original gQUIC design thanks to open collaboration from many organizations and individuals, with the shared goal of making the Internet faster and more secure.
+“IETF QUIC”（从现在开始只是“QUIC”）已经与gQUIC有很大不同，因此我们已经可以将其视为一个单独的协议333。从数据包的格式，到HTTP的握手和映射，QUIC改进了原始的gQUIC设计，其共同目标是使互联网更快，更安全。
 
-“IETF QUIC”（从现在开始只是“QUIC”）已经与gQUIC有很大不同，因此我们已经可以将其视为一个单独的协议。从数据包的格式，到HTTP的握手和映射，QUIC改进了原始的gQUIC设计，其共同目标是使互联网更快，更安全。
-
-So, what are the improvements QUIC provides?
 
 那么，QUIC提供了哪些方面的改进？
 
-### Built-in security (and performance) 内置安全性（和性能）
+### 内置安全性和性能 Built-in security (and performance)
 
-One of QUIC’s more radical deviations from the now venerable TCP, is the stated design goal of providing a secure-by-default transport protocol. QUIC accomplishes this by providing security features, like authentication and encryption, that are typically handled by a higher layer protocol (like TLS), from the transport protocol itself.
 
 QUIC与现在古老的TCP的一个更根本的区别是，QUIC在是提供默认安全传输的目标下进行设计的。QUIC 通过提供安全功能（如身份验证和加密）来实现这一点，这些功能通常由传输协议之上更高层协议（如 TLS）处理。
 
-The initial QUIC handshake combines the typical three-way handshake that you get with TCP, with the TLS 1.3 handshake, which provides authentication of the end-points as well as negotiation of cryptographic parameters. For those familiar with the TLS protocol, QUIC replaces the TLS record layer with its own framing format, while keeping the same TLS handshake messages.
-
-起初，QUIC 握手是通过将 TCP的三次握手与 TLS 1.3 握手相结合实现的，TLS 1.3 握手提供端点身份验证以及加密参数协商。对于那些熟悉TLS协议的人来说，QUIC用自己的帧格式替换TLS记录层，达到保持相同的TLS握手消息的目的。
-
-Not only does this ensure that the connection is always authenticated and encrypted, but it also makes the initial connection establishment faster as a result: the typical QUIC handshake only takes a single round-trip between client and server to complete, compared to the two round-trips required for the TCP and TLS 1.3 handshakes combined.
+起初，QUIC 握手是通过类比TCP的三次握手与 TLS 1.3 握手相结合实现的，TLS 1.3 握手提供端点身份验证以及加密参数协商。对于那些熟悉TLS协议的人来说，QUIC用自己的帧格式替换TLS记录层，达到保持相同的TLS握手消息的目的。
 
 这不仅确保了连接始终经过身份验证和加密，而且还使初始连接建立速度更快：**QUIC 握手只需要客户端和服务器之间的一轮往返即可完成，而 TCP 和 TLS 1.3 握手需要两轮往返**。
 
 ![][img-2] ![][img-3]
 
-But QUIC goes even further, and also encrypts additional connection metadata that could be abused by middle-boxes to interfere with connections. For example packet numbers could be used by passive on-path attackers to correlate users activity over multiple network paths when connection migration is employed (see below). By encrypting packet numbers QUIC ensures that they can't be used to correlate activity by any entity other than the end-points in the connection.
 
-但 QUIC 其实更进一步，它还加密了可能被中间设备滥用，来干扰连接的其他连接元数据。例如，当采用连接迁移时，被动中间人攻击者可以使用数据包编号来关联用户在多个网络路径上的活动（见下文）。通过加密数据包编号，QUIC 可确保它们不能用于关联连接中端点以外的任何实体的活动。
-
-Encryption can also be an effective remedy to ossification, which makes flexibility built into a protocol (like for example being able to negotiate different versions of that protocol) impossible to use in practice due to wrong assumptions made by implementations (ossification is what [delayed deployment of TLS 1.3](https://blog.cloudflare.com/why-tls-1-3-isnt-in-browsers-yet/) for so long, which [was only possible](https://blog.cloudflare.com/you-get-tls-1-3-you-get-tls-1-3-everyone-gets-tls-1-3) after several changes, designed to prevent ossified middle-boxes from incorrectly blocking the new revision of the TLS protocol, were adopted).
+但 QUIC 其实更进一步，它还加密了可能被中间设备滥用，来干扰连接的其他数据。例如，当采用连接迁移时，被动中间人攻击者可以使用数据包编号来关联用户在多个网络路径上的活动（见下文）。通过加密数据包编号，QUIC 可确保它们不能用于关联连接中端点以外的任何实体的活动。
 
 但加密有时也会导致协议的是使用更僵化，因为它使得协议中内置的灵活性（例如能够协商该协议的不同版本）在实践中无法使用，例如因为做出了错误的假设，[TLS 1.3的大规模使用](https://blog.cloudflare.com/why-tls-1-3-isnt-in-browsers-yet/)被推迟数次。
 
 ### 队头阻塞（Head-of-line blocking）
 
-One of the main improvements delivered by [HTTP/2](https://blog.cloudflare.com/introducing-http2/) was the ability to multiplex different HTTP requests onto the same TCP connection. This allows HTTP/2 applications to process requests concurrently and better utilize the network bandwidth available to them.
 
 [HTTP/2](https://blog.cloudflare.com/introducing-http2/) 的主要改进之一就是能够将不同的HTTP请求多路复用到同一个TCP连接上。这允许HTTP / 2应用程序并发处理请求，可以更好地利用可用的网络带宽。
-
-This was a big improvement over the then status quo, which required applications to initiate multiple TCP+TLS connections if they wanted to process multiple HTTP/1.1 requests concurrently (e.g. when a browser needs to fetch both CSS and Javascript assets to render a web page). Creating new connections requires repeating the initial handshakes multiple times, as well as going through the initial congestion window ramp-up, which means that rendering of web pages is slowed down. Multiplexing HTTP exchanges avoids all that.
 
 这是对现状的一大改进，此前如果应用程序需要同时处理多个HTTP / 1.1请求（例如，当浏览器需要获取CSS和Javascript资产来呈现网页时），那需要启动多个TCP + TLS连接。而创建新连接意味着需要多次重复初始握手，并经历初始拥塞窗口的加速，它意味着网页的呈现速度会变慢。HTTP交换的多路复用解决了这些问题。
 
 ![][img-4]
 
-This however has a downside: since multiple requests/responses are transmitted over the same TCP connection, they are all equally affected by packet loss (e.g. due to network congestion), even if the data that was lost only concerned a single request. This is called “head-of-line blocking”.
-
 然而，[HTTP/2](https://blog.cloudflare.com/introducing-http2/)多路复用也带来了另一个缺点：由于多个请求/响应通过同一TCP连接传输，当在网络拥塞时，所有的请求均会受到数据包丢失的影响，即使丢失的数据仅涉及单个请求。这种现象被称为“队头阻塞”。
 
-QUIC goes a bit deeper and provides first class support for multiplexing such that different HTTP streams can in turn be mapped to different QUIC transport streams, but, while they still share the same QUIC connection so no additional handshakes are required and congestion state is shared, QUIC streams are delivered independently, such that in most cases packet loss affecting one stream doesn't affect others.
+
 
 QUIC 则更深入一些，它为多路复用提供了一流的支持，它将不同的 HTTP 流依次映射到不同的 QUIC 传输流。HTTP 流仍然共享相同的 QUIC 连接，因此不需要额外的握手，并且拥塞状态是共享的。由于QUIC 流是独立交付的，因此在大多数情况下，一个流的数据包丢失不会影响其他流。
 
-This can dramatically reduce the time required to, for example, render complete web pages (with CSS, Javascript, images, and other kinds of assets) particularly when crossing highly congested networks, with high packet loss rates.
-
 这可以大大减少渲染完整网页（使用 CSS、Javascript、图像和其他类型的资产）所需的时间，因为跨高度拥塞的网络传输数据时，数据包丢失率很高。
 
-### That easy, uh?
+### 事实远非这么简单(That easy, uh?)
 
-In order to deliver on its promises, the QUIC protocol needs to break some of the assumptions that were taken for granted by many network applications, potentially making implementations and deployment of QUIC more difficult.
 
-为了实现起目的，QUIC协议需要打破许多网络应用程序认为理所当然的一些假设，这可能会使QUIC的实施和部署更加困难。
-
-QUIC is designed to be delivered on top of UDP datagrams, to ease deployment and avoid problems coming from network appliances that drop packets from unknown protocols, since most appliances already support UDP. This also allows QUIC implementations to live in user-space, so that, for example, browsers will be able to implement new protocol features and ship them to their users without having to wait for operating systems updates.
+为了实现目的，QUIC协议需要打破许多网络应用程序认为理所当然的一些假设，这可能会使QUIC的实施和部署更加困难。
 
 QUIC 旨在通过在 UDP 数据报进行交付，以简化部署并避免网络设备丢弃来自未知协议的数据包的问题，因为大多数设备已经支持 UDP。这也允许 QUIC 实现更贴近用户，例如浏览器已经支持通过新的协议功能并将其发送给用户，而无需等待操作系统更新。
 
-However despite the intended goal of avoiding breakage, it also makes preventing abuse and correctly routing packets to the correct end-points more challenging.
-
 然而，尽管QUIC的预期目标是避免数据破损，但它也使得防止滥用和将数据包路由到正确的端点更具挑战性。
 
-### One NAT to bring them all and in the darkness bind them 一个 NAT 将它们全部带走，并在黑暗中束缚他们
+#### **NAT 陷阱**
 
-Typical NAT routers can keep track of TCP connections passing through them by using the traditional 4-tuple (source IP address and port, and destination IP address and port), and by observing TCP SYN, ACK and FIN packets transmitted over the network, they can detect when a new connection is established and when it is terminated. This allows them to precisely manage the lifetime of NAT bindings, the association between the internal IP address and port, and the external ones.
-
-典型的 NAT 路由器可以使用传统的 4 元组（源 IP 地址和端口以及目标 IP 地址和端口）来跟踪通过它们的 TCP 连接，并通过观察通过网络传输的 TCP SYN、ACK 和 FIN 数据包，它们可以检测何时建立新连接以及何时终止。这使他们能够精确管理 NAT 绑定的生存期、内部 IP 地址和端口与外部 IP 地址和端口之间的关联。
-
-
-With QUIC this is not yet possible, since NAT routers deployed in the wild today do not understand QUIC yet, so they typically fallback to the default and less precise handling of UDP flows, which usually involves using [arbitrary, and at times very short, timeouts](https://conferences.sigcomm.org/imc/2010/papers/p260.pdf), which could affect long-running connections.
+典型的 NAT 路由器可以使用传统的 4 元组（源 IP 地址和端口以及目标 IP 地址和端口）来跟踪通过它们的 TCP 连接，通过观察通网络传输的 TCP SYN、ACK 和 FIN 数据包，它们可以检测何时建立新连接以及何时终止。这使他们能够精确管理 NAT 绑定的生存期、内部 IP 地址和端口与外部 IP 地址和端口之间的关联。
 
 对于QUIC来说，这是不可能的。因为今天广泛部署NAT路由器尚不支持QUIC。因此这些NAT路由器通常会退回到默认值和传统的不精确的UDP，因为涉及使用 [arbitrary, and at times very short, timeouts](https://conferences.sigcomm.org/imc/2010/papers/p260.pdf)，可能会影响长期连接。
 
-When a NAT rebinding happens (due to a timeout for example), the end-point on the outside of the NAT perimeter will see packets coming from a different source port than the one that was observed when the connection was originally established, which makes it impossible to track connections by only using the 4-tuple.
 
 发生 NAT 重新绑定时（例如由于超时），NAT 外围的端点将收到与最初建立连接时观察到的源端口不同端口的数据包，这使得仅使用 4 元组无法跟踪连接。
 
 ![][img-5]
 
-And it's not just NAT! One of the features QUIC is intended to deliver is called “connection migration” and will allow QUIC end-points to migrate connections to different IP addresses and network paths at will. For example, a mobile client will be able to migrate QUIC connections between cellular data networks and WiFi when a known WiFi network becomes available (like when its user enters their favorite coffee shop).
-
 而且不仅仅是 NAT！QUIC旨在提供的功能之一称为“连接迁移”，它将允许QUIC随意将连接迁移到不同的IP地址和网络。例如，当已知的WiFi网络可用时（例如，当用户进入他们最喜欢的咖啡店时），移动客户端将能够在蜂窝数据网络和WiFi之间迁移QUIC连接。
 
 QUIC tries to address this problem by introducing the concept of a connection ID: an arbitrary opaque blob of variable length, carried by QUIC packets, that can be used to identify a connection. End-points can use this ID to track connections that they are responsible for without the need to check the 4-tuple (in practice there might be multiple IDs identifying the same connection, for example to avoid linking different paths when connection migration is used, but that behavior is controlled by the end-points not the middle-boxes).
 
-QUIC 试图通过引入连接 ID 的概念来解决此问题：由 QUIC 数据包携带的可变长度的任意不透明 blob，可用于标识连接。端点可以使用此 ID 来跟踪它们负责的连接，而无需检查 4 元组（实际上，可能有多个 ID 标识同一连接，例如，避免在使用连接迁移时链接不同的路径，但该行为由端点而不是中间框控制）。
+QUIC 试图通过引入**连接 ID** 的概念来解决此问题：该**ID**由 QUIC 由数据包的长度构成，可用于标识连接。端点可以使用此 ID 来跟踪它们负责的连接，而无需检查 4 元组（实际上，可能有多个 ID 标识同一连接，例如，避免在使用连接迁移时链接不同的路径，但该行为由端点而不是中间框控制）。
 
-However this also poses a problem for network operators that use anycast addressing and [ECMP routing](https://blog.cloudflare.com/path-mtu-discovery-in-practice/), where a single destination IP address can potentially identify hundreds or even thousands of servers. Since edge routers used by these networks also don't yet know how to handle QUIC traffic, it might happen that UDP packets belonging to the same QUIC connection (that is, with the same connection ID) but with different 4-tuple (due to NAT rebinding or connection migration) might end up being routed to different servers, thus breaking the connection.
 
 然而，这也给使用任播寻址和[ECMP routing](https://blog.cloudflare.com/path-mtu-discovery-in-practice/)的网络运营商带来了问题,因为单个IP地址可以潜在地包含数百甚至数千台服务器。由于这些网络使用的边缘路由器还不知道如何处理 QUIC 流量，因此属于同一 QUIC 连接（即具有相同连接 ID）但具有不同 4 元组（由于 NAT 重新绑定或连接迁移）的 UDP 数据包最终可能会路由到不同的服务器，从而中断连接。
 
 ![][img-6]
 
-In order to address this, network operators might need to employ smarter layer 4 load balancing solutions, which can be implemented in software and deployed without the need to touch edge routers (see for example Facebook's [Katran](https://github.com/facebookincubator/katran) project).
 
 为了解决这个问题，网络运营商可能需要采用更智能的第4层负载平衡解决方案，这些解决方案可以在软件中实现并部署，而无需接触边缘路由器（例如参考Facebook的[Katran](https://github.com/facebookincubator/katran)项目）。
 
-### QPACK
+### 头部压缩(QPACK)
 
-Another benefit introduced by HTTP/2 was [header compression (or HPACK)](https://blog.cloudflare.com/hpack-the-silent-killer-feature-of-http-2/) which allows HTTP/2 end-points to reduce the amount of data transmitted over the network by removing redundancies from HTTP requests and responses.
 
 HTTP/2引入的另一个好处是[头部压缩（或HPACK）](https://blog.cloudflare.com/hpack-the-silent-killer-feature-of-http-2/)，它允许HTTP / 2通过删除HTTP请求和响应中的冗余来减少通过网络传输的数据量。
 
 In particular, among other techniques, HPACK employs dynamic tables populated with headers that were sent (or received) from previous HTTP requests (or responses), allowing end-points to reference previously encountered headers in new requests (or responses), rather than having to transmit them all over again.
 
-特别是HCPACK 使用动态表填充，可以从之前的 HTTP 请求（或响应）中提取头部，进而允许端点引用新请求（或响应）中以前的头部，而不必重新传输它们。
+HCPACK 使用动态表填充，可以从之前的 HTTP 请求（或响应）中提取头部，进而允许端点引用新请求（或响应）中以前的头部，而不必重新传输它们。
 
-HPACK's dynamic tables need to be synchronized between the encoder (the party that sends an HTTP request or response) and the decoder (the one that receives them), otherwise the decoder will not be able to decode what it receives.
 
 HPACK 的动态表需要在编码器（发送 HTTP 请求或响应的一方）和解码器（接收它们的一方）之间同步，否则解码器将无法解码它接收到的内容。
 
-With HTTP/2 over TCP this synchronization is transparent, since the transport layer (TCP) takes care of delivering HTTP requests and responses in the same order they were sent in, the instructions for updating the tables can simply be sent by the encoder as part of the request (or response) itself, making the encoding very simple. But for QUIC this is more complicated.
 
 基于 TCP 的 HTTP/2，这种同步是透明的，因为传输层协议 （TCP） 以发送的顺序传递 HTTP 请求和响应；更新表的指令可以由编码器作为请求的一部分发送，使编码非常简单。但对于QUIC来说，这更复杂。
 
-QUIC can deliver multiple HTTP requests (or responses) over different streams independently, which means that while it takes care of delivering data in order as far as a single stream is concerned, there are no ordering guarantees across multiple streams.
-
 QUIC可以独立地通过不同的流传递多个HTTP请求（或响应），这意味着虽然它负责按单个流的顺序传递数据，但跨多个流没有排序保证。
 
-For example, if a client sends HTTP request A over QUIC stream A, and request B over stream B, it might happen, due to packet reordering or loss in the network, that request B is received by the server before request A, and if request B was encoded such that it referenced a header from request A, the server will be unable to decode it since it didn't yet see request A.
-
-例如，如果客户端通过 QUIC 流 A 发送 HTTP 请求 A，并通过流 B 发送请求 B，如果此时发生网络中的数据包重新排序或丢失，服务器会先收到B请求，然后收到A请求，如果请B 的编码使其引用了A 中的头部，服务器将会无法对其进行解码，因为它尚未收到请求 A。
-
-In the gQUIC protocol this problem was solved by simply serializing all HTTP request and response headers (but not the bodies) over the same gQUIC stream, which meant headers would get delivered in order no matter what. This is a very simple scheme that allows implementations to reuse a lot of their existing HTTP/2 code, but on the other hand it increases the head-of-line blocking that QUIC was designed to reduce. The IETF QUIC working group thus designed a new mapping between HTTP and QUIC (**HTTP/QUIC**) as well as a new header compression scheme called**QPACK**.
+例如，如果客户端通过 QUIC 流 A 发送 HTTP 请求 A，并通过流 B 发送请求 B，如果此时发生网络中的数据包重新排序或丢失，服务器会先收到B请求，然后收到A请求，如果B的编码使其引用了A 中的头部，服务器将会无法对其进行解码，因为它尚未收到请求 A。
 
 在 gQUIC 协议中，这个问题是通过序列化同一个 gQUIC 流上的所有 HTTP 请求和响应头部（而不是正文）来解决的，这意味着无论如何头部都会按顺序交付。这是一个非常简单的方案，它允许重用大量现有的HTTP / 2代码，但另一方面，它增加了QUIC旨在减少的头部阻塞。因此，IETF QUIC工作组设计了HTTP和QUIC（**HTTP/QUIC**）之间的新映射，以及一个名为**QPACK**的新标头压缩方案。
-
-In the latest draft of the HTTP/QUIC mapping and the QPACK spec, each HTTP request/response exchange uses its own bidirectional QUIC stream, so there's no head-of-line blocking. In addition, in order to support QPACK, each peer creates two additional unidirectional QUIC streams, one used to send QPACK table updates to the other peer, and one to acknowledge updates received by the other side. This way, a QPACK encoder can use a dynamic table reference only after it has been explicitly acknowledged by the decoder.
 
 在最新的HTTP/QUIC映射和QPACK规范的草案中，每个HTTP请求/响应交换都使用自己的双向QUIC流，因此没有头部阻塞。此外，为了支持 QPACK，每个对等方创建两个额外的单向 QUIC 流，一个将 QPACK 表更新发送到另一个对等方，另一个用于确认另一方收到的更新。这样，QPACK 编码器只有在解码器显式确认动态表引用后才能使用动态表引用。
 
 ### 偏转反射（Deflecting Reflection）
 
-A common problem among [UDP-based](https://blog.cloudflare.com/ssdp-100gbps/) [protocols](https://blog.cloudflare.com/memcrashed-major-amplification-attacks-from-port-11211/) is their susceptibility to [reflection attacks](https://blog.cloudflare.com/reflections-on-reflections/), where an attacker tricks an otherwise innocent server into sending large amounts of data to a third-party victim, by spoofing the source IP address of packets targeted to the server to make them look like they came from the victim.
 
 [基于 UDP](https://blog.cloudflare.com/ssdp-100gbps/) [协议](https://blog.cloudflare.com/memcrashed-major-amplification-attacks-from-port-11211/)中的一个常见问题是它们容易受到 [反射攻击](https://blog.cloudflare.com/reflections-on-reflections/)，攻击者通过欺骗针对服务器的数据包的源 IP 地址，使其看起来像来自受害者，从而欺骗原本无辜的服务器向第三方受害者发送大量数据。
 
 ![][img-7]
 
-This kind of attack can be very effective when the response sent by the server happens to be larger than the request it received, in which case we talk of “amplification”.
 
 当服务器发送的响应恰好大于它收到的请求时，这种攻击会非常有效，我们一般把这种情况叫做“扩大”。
 
-TCP is not usually used for this kind of attack due to the fact that the initial packets transmitted during its handshake (SYN, SYN+ACK, …) have the same length so they don’t provide any amplification potential.
 
 此类攻击一般不适用于TCP，因为TCP在握手期间传输的初始数据包（SYN，SYN + ACK等）具有相同的长度，它们不提供任何放大潜力。
 
-QUIC’s handshake on the other hand is very asymmetrical: like for TLS, in its first flight the QUIC server generally sends its own certificate chain, which can be very large, while the client only has to send a few bytes (the TLS ClientHello message embedded into a QUIC packet). For this reason, the initial QUIC packet sent by a client has to be padded to a specific minimum length (even if the actual content of the packet is much smaller). However this mitigation is still not sufficient, since the typical server response spans multiple packets and can thus still be far larger than the padded client packet.
-
 另一方面，QUIC的握手是非常不对称的：与TLS一样，在第一次握手中，QUIC服务器通常会发送自己的证书链，该证书链可能非常大，而客户端只需要发送几个字节（嵌入到QUIC数据包中的TLS ClientHello消息中）。因此，客户端发送的初始 QUIC 数据包必须具有特定的最小长度（即使数据包的实际内容要小得多）。但是这种缓解措施仍然不够，因为典型的服务器响应请求可能跨越多个数据包，因此最终的数据包仍可能远远大于填充的客户端数据包。
 
-The QUIC protocol also defines an explicit source-address verification mechanism, in which the server, rather than sending its long response, only sends a much smaller “retry” packet which contains a unique cryptographic token that the client will then have to echo back to the server inside a new initial packet. This way the server has a higher confidence that the client is not spoofing its own source IP address (since it received the retry packet) and can complete the handshake. The downside of this mitigation is that it increases the initial handshake duration from a single round-trip to two.
 
-QUIC协议还定义了明确的源地址验证机制，此时服务器不发送其长响应，只发送一个小得多的“重试”数据包，该数据包中包含一个唯一的加密令牌，然后客户端必须在新的初始数据包中显示地回服务器。这样服务器可以更确信客户端不会欺骗自己的源 IP 地址（因为它收到了重试数据包），并且可以完成握手。然而这个缓解措施也有缺点，它将初始握手持续时间从单次往返增加到两次。
-
-An alternative solution involves reducing the server's response to the point where a reflection attack becomes less effective, for example by using [ECDSA certificates](https://blog.cloudflare.com/ecdsa-the-digital-signature-algorithm-of-a-better-internet/) (which are typically much smaller than their RSA counterparts). We have also been experimenting with a mechanism for [compressing TLS certificates](https://tools.ietf.org/html/draft-ietf-tls-certificate-compression) using off-the-shelf compression algorithms like zlib and brotli, which is a feature originally introduced by gQUIC but not currently available in TLS.
+QUIC协议还定义了明确的源地址验证机制，此时服务器不发送长响应，只发送一个小得多的“重试”数据包，该数据包中包含一个唯一的加密令牌，然后客户端必须在新的初始数据包中显示地回服务器。这样服务器可以更确信客户端不会欺骗自己的源 IP 地址（因为它收到了重试数据包），并且可以完成握手。然而这个缓解措施也有缺点，它将初始握手持续时间从单次往返增加到两次。
 
 另一种解决方案是将服务器的响应降低到反射攻击变得不那么有效的程度，例如通过使用[ECDSA证书](https://blog.cloudflare.com/ecdsa-the-digital-signature-algorithm-of-a-better-internet/)（通常比RSA证书小得多）。我们也一直在尝试一种机制，使用现成的压缩算法（如zlib和brotli）来[压缩TLS证书](https://tools.ietf.org/html/draft-ietf-tls-certificate-compression)，这是最初由gQUIC引入的功能,但目前在TLS中不可用。
 
 ### UDP性能(UDP performance)
 
-One of the recurring issues with QUIC involves existing hardware and software deployed in the wild not being able to understand it. We've already looked at how QUIC tries to address network middle-boxes like routers, but another potentially problematic area is the performance of sending and receiving data over UDP on the QUIC end-points themselves. Over the years a lot of work has gone into optimizing TCP implementations as much as possible, including building off-loading capabilities in both software (like in operating systems) and hardware (like in network interfaces), but none of that is currently available for UDP.
-
 QUIC反复出现的问题之一是当前广泛部署的硬件和软件无法理解它。我们已经了解了 QUIC 如何尝试处理路由器等网络中间设备，但另一个潜在的问题领域是UDP在 QUIC 端点上发送和接收数据的性能。多年来，TCP在优化实现方面已经做了大量工作，包括在软件（如操作系统）和硬件（如网络接口）中构建卸载功能，但目前这些都不适用于UDP。
-
-However it’s only a matter of time until QUIC implementations can take advantage of these capabilities as well. Look for example at the recent efforts to implement [Generic Segmentation Offloading for UDP on LInux](https://lwn.net/Articles/752184/), which would allow applications to bundle and transfer multiple UDP segments between user-space and the kernel-space networking stack at the cost of a single one (or close enough), as well as the one to add [zerocopy socket support also on Linux](https://lwn.net/Articles/655299/) which would allow applications to avoid the cost of copying user-space memory into kernel-space.
 
 但是，QUIC实现这些功能只是时间问题。例如，最近实现的 [Generic Segmentation Offloading for UDP on LInux](https://lwn.net/Articles/752184/)，它允许应用程序在用户态和内核态的网络堆栈之间传输多个UDP段；以及添加 [zerocopy socket support also on Linux](https://lwn.net/Articles/655299/)，这将允许应用程序避免将用户态内存复制到内核态。
 
 ### 结论（Conclusion）
-
-Like HTTP/2 and TLS 1.3, QUIC is set to deliver a lot of new features designed to improve performance and security of web sites, as well as other Internet-based properties. The IETF working group is currently set to deliver the first version of the QUIC specifications by the end of the year and Cloudflare engineers are already hard at work to provide the benefits of QUIC to all of our customers.
 
 与HTTP / 2和TLS 1.3一样，QUIC将提供许多新功能，旨在提高网站的性能和安全性，以及其他基于Internet的属性。IETF工作组目前定于今年年底(本文著于2018年)前交付QUIC规范的第一版。
 
