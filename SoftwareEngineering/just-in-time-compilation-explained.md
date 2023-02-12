@@ -2,57 +2,38 @@
 
  ![][img-0] 
 
-Just-in-time compilation is a method for improving the performance of interpreted programs. During execution the program may be compiled into native code to improve its performance. It is also known as dynamic compilation.
-
 即时编译(JIT)是一种提高解释程序性能的方法。在执行过程中，程序被编译为[本机代码](https://baike.baidu.com/item/Native%20Code/10402755#:~:text=外文名.%20Native%20Code.%20含%20义.%20特定于处理器的%20机器码%20的代码.,已被编译为特定于处理器的%20机器码%20的代码%E3%80%82.%20本地代码%20（native%20code）是计算机编程（代码），编译用来运行一个特殊的处理器（如英特尔x86级的处理器）和它的特殊%20指令集%20%E3%80%82.)以提高其性能。它也被称为动态编译。
 
-Dynamic compilation has some advantages over static compilation. When running Java or C# applications, the runtime environment can profile the application while it is being run. This allows for more optimized code to be generated. If the behavior of the application changes while it is running, the runtime environment can recompile the code.
-
 比静态编译相比, 动态编译具有一些优点。当运行 Java 或 C# 应用程序时，运行时可以对应用程序进行性能分析，最终生成更优化的代码。如果程序在运行时发生更改，则运行时可以重新编译代码。
-
-Some of the disadvantages include startup delays and the overhead of compilation during runtime. To limit the overhead, many JIT compilers only compile the code paths that are frequently used.
 
 与之对应的缺点则是启动延迟和运行时的编译开销。为了限制开销，许多 JIT 编译器仅编译经常使用的代码。
 
 ## 概览（Overview）
 
-Traditionally there are two methods for converting source code into a form that can be run on a platform. Static compilation converts the code into a language for a specific platform. An interpreter directly executes the source code.
 
 传统上，有两种方法可以将源代码转换为可以在平台上运行的机器码。静态编译将代码转换为特定平台的机器码，解释器直接执行源代码。
 
-JIT compilation attempts to use the benefits of both. While the interpreted program is being run, the JIT compiler determines the most frequently used code and compiles it to machine code. Depending on the compiler, this can be done on a method or smaller section of code.
 
 **JIT 则结合两者的优点。在运行解释程序时，JIT 编译器确定最常用的关键代码并将其编译为机器码。根据编译器的配置不同，它可以在小范围的代码或者方法上完成此编译操作**。
 
 ![](./pics/Compile.PNG)
-Dynamic compilation was first described in a paper by J. McCarthy on LISP in 1960.
 
 动态编译最早是在 J. McCarthy 在 1960 年一篇关于 LISP 的论文中提出。
 
-Just In Time Compilation, JIT, or Dynamic Translation, is compilation that is being done during the execution of a program. Meaning, at run time, as opposed to prior to execution. What happens is the translation to machine code. The advantages of a JIT are due to the fact, that since the compilation takes place in run time, a JIT compiler has access to dynamic runtime information enabling it to make better optimizations (such as inlining functions).
-
 JIT是在程序执行期间完成编译，意味着将源代码转换为机器码是发生在运行时，而不是在执行之前。JIT 的优点是在于因为编译是在运行时进行的，所以JIT 编译器可以访问动态运行时信息，使其能够进行更好的优化（例如内联函数）。
 
-What is important to understand about the JIT compilation, is that it will compile the bytecode into machine code instructions of the running machine. Meaning, that the resulting machine code is optimized for the running machine’s CPU architecture.
-
 关于JIT编译，重要的是要了解它将字节码编译成适配当前架构的机器码。这意味着，生成的机器代码对正在运行的计算机的 CPU 架构进行了优化。
-
-Some examples of JIT Compilers are JVM (Java Virtual Machine) in Java and CLR (Common Language Runtime), in C#.
 
 JIT 编译器的常见例子是是 Java 中的 JVM（Java 虚拟机）和 C# 中的 CLR（公共语言运行时）。
 
 ## 历史（History）
 
-In the beginning, a compiler was responsible for turning a high-level language (defined as higher level than assembler) into object code (machine instructions), which would then be linked (by a linker) into an executable.
+
 
 起初，编译器负责将高级语言（定义为比汇编程序更高级别）转换为目标代码（机器指令），然后通过链接器将其链接为可执行文件。
 
-At one point in the evolution of languages, compilers would compile a high-level language into pseudo-code, which would then be interpreted (by an interpreter) to run your program. This eliminated the object code and executables, and allowed these languages to be portable to multiple operating systems and hardware platforms. Pascal (which compiled to P-Code) was one of the first; Java and C# are more recent examples. Eventually the term P-Code was replaced with bytecode, since most of the pseudo-operations are a byte long.
-
 在语言发展过程中的某一时刻，编译器能够将高级语言编译为伪代码，然后由解释器来运行程序。这消除了目标代码和可执行文件，并允许这些语言移植到多个操作系统和硬件平台。Pascal（编译为P代码）是第一个这样做的语言; Java和C#是最近的例子。最终，术语P代码被字节码取代，因为大多数伪操作都可以用一个字节来描述。
 
-
-A Just-In-Time (JIT) compiler is a feature of the run-time interpreter, that instead of interpreting bytecode every time a method is invoked, will compile the bytecode into the machine code instructions of the running machine, and then invoke this object code instead. Ideally the efficiency of running object code will overcome the inefficiency of recompiling the program every time it runs.
 
 **JIT 编译器是运行时解释器的一项功能，它不是在每次调用方法时解释字节码，而是将字节码编译为当前计算机的机器码，然后改为调用此机器码。理想情况下，直接运行目标代码将解决每次运行时，重新编译程序带来的低效率问题**。
 
@@ -66,20 +47,14 @@ The source code is completely converted into machine code
 
 The source code will be converted into assembly language like structure [for ex IL (intermediate language) for C#, ByteCode for java].
 
-源代码将被转换为结构类似的汇编语言[对于C#的IL（中间语言），Java的字节码]。
-
-The intermediate code is converted into machine language only when the application needs that is required codes are only converted to machine code.
+源代码将被转换为结构类似的汇编语言--对于C#的IL（中间语言），Java的字节码。
 
 只有当被调用时才将中间代码转换为机器码。
 
 ## JIT 与Non-JIT对比（JIT vs Non-JIT comparison）
 
-In JIT not all the code is converted into machine code first a part of the code that is necessary will be converted into machine code then if a method or functionality called is not in machine then that will be turned into machine code, which reduces burden on the CPU. As the machine code will be generated on run time, the JIT compiler will produce machine code that is optimized for running machine’s CPU architecture.
-
 在JIT中，并非所有代码都会被转换为机器码，**首先将关键的一部分代码的转换为机器码，然后如果被调用的方法不在机器码中时，则会将起转换为机器码，从而减轻CPU的负担**。由于机器码是在运行时生成的，因此 JIT 编译器将生成针对当前计算机的 CPU 体系结构优化机器码。
 
-
-Some examples of JIT are:
 
  JIT的常见例子有 ：
 
@@ -88,11 +63,8 @@ Some examples of JIT are:
 *   Android: DVM (Dalvik Virtual Machine) or ART (Android RunTime) in newer versions
 
 
-The Java Virtual Machine (JVM) executes bytecode and maintains a count as of how many time a function is executed. If this count exceeds a predefined limit JIT compiles the code into machine language which can directly be executed by the processor (unlike the normal case in which javac compiles the code into bytecode and then Java, the interpreter interprets this bytecode line by line converts it into machine code and executes).
-
 Java 虚拟机 （JVM） 执行字节码并维护函数调用次数的计数器。如果某个函数的数值超过预定义的限制，JIT 会自动将代码编译为可由处理器直接执行的机器码（通常情况是 javac 将代码编译为字节码，解释器逐行解释此字节码将其转换为机器码执行）。
 
-Also next time this function is calculated same compiled code is executed again unlike normal interpretation in which the code is interpreted again line by line. This makes execution faster.
 
 当下次计算此函数时，将执行被JIT编译过的机器码，与逐行解释代码的正常流程相比，它可以加快代码执行速度。
 
