@@ -31,3 +31,4 @@
 ### Kubernetes
 * [K3s Vs K8s: What’s The Difference? (And When To Use Each)](./kubernetes/k8s-vs-k3s.md)
 * [Kubernetes headless Service](./kubernetes/headLess-svc.md)
+* [从应用开发者的角度来学习K8S](./kubernetes/learning-k8s-by-running-app.md)
