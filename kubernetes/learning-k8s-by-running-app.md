@@ -201,6 +201,7 @@ PersistentVolumeClaim (PVC) 是 Kubernetes 中的另一种资源对象，它表�
 
 ![](./pics/k8s-mysql-arch.png)
 
+图片来源（[K8s 应用管理之道 - 有状态服务](https://developer.aliyun.com/article/689685)）
 
 通过上面的k8s的资源部署 MySQL集群的具体流程如下：
 
