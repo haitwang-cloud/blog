@@ -1,5 +1,4 @@
-WIP
-# Background
+# 背景
 
 
 Kubernetes（简称K8S）是一种开源的容器编排系统，用于自动化管理、部署和扩展容器化应用程序。K8S是云原生架构的核心组件之一，它可以帮助开发人员更轻松地构建和管理云原生应用程序。K8s还提供了许多高级功能，例如负载均衡、服务发现、自动伸缩、存储管理等，这些功能可以帮助开发人员更轻松地构建可靠的云原生应用程序。
@@ -13,6 +12,12 @@ Kubernetes（简称K8S）是一种开源的容器编排系统，用于自动化�
 5. **不适合小规模应用**：由于Kubernetes需要占用较高的资源和运行多个组件，因此它对于小规模应用来说可能过于复杂和冗余。对于一些简单的应用，使用Kubernetes可能并不划算
 
 如果你是一个不了解 K8S的开发人员，那么本文将从具体的使用的角度来帮助你学习和理解K8S。在学习 Kubernetes 之前，先了解一些基础概念
+
+无状态应用是指应用本身不依赖于任何状态信息。也就是说，无状态应用不会维护任何与用户或请求相关的信息，它仅仅根据输入的请求进行计算和处理，并将结果返回给客户端。无状态应用通常使用负载均衡器将请求分配到多个服务器上进行处理，从而实现高可用性和可扩展性。常见的无状态应用包括 Web 服务、RESTful API、静态网站等。
+
+相对于无状态应用，有状态应用依赖于一定的状态信息来完成任务。有状态应用在处理请求时需要使用上下文信息，包括用户信息、会话状态、数据库连接状态等等。有状态应用通常需要使用持久化存储来保存状态信息，比如数据库、缓存、文件系统等。有状态应用不适合使用负载均衡器进行请求分发，因为请求需要在同一个服务器上处理，否则会出现状态不一致的问题。常见的有状态应用包括在线游戏、聊天应用、电子商务应用等。
+
+需要注意的是，有状态应用和无状态应用并不是互相排斥的关系，而是根据应用的需求和特点来选择最合适的架构模式。有些应用可能既有无状态部分，也有有状态部分，需要使用混合的架构模式来实现。
 
 ## Load Balancing
 
@@ -130,7 +135,7 @@ ConfigMap 和 Secret 是 Kubernetes 中用于管理应用配置和敏感数据�
 
 想要深入了解 K8S的读者可以查看 [Kubernetes 基础教程](https://lib.jimmysong.io/kubernetes-handbook/architecture/perspective/#kubernetes-%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5%E4%B8%8E%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F) 和 [Kubernetes 文档](https://kubernetes.io/docs/concepts/)
 
-### kube-proxy
+**kube-proxy**
 
 前文提到Service为一组Pod提供了一个稳定的、虚拟的IP地址和DNS名称，具有负载均衡的功能。Service的负载均衡是基于L4负载均衡实现的。具体而言，Kube-proxy会根据请求的目标IP地址和端口，将请求转发到相应的后端Pod。这是一个基于TCP/UDP协议的转发过程，因此被称为四层负载均衡。在转发过程中，Kube-proxy会维护一些iptables或IPVS规则，根据这些规则来实现负载均衡和服务发现的功能。因此接下来介绍一些Kube-proxy的实现原理。
 
@@ -168,16 +173,244 @@ Kube-proxy提供了三种代理模式：
 
 ipvs模式：使用Linux内核的IPVS（IP Virtual Server）技术来实现负载均衡和服务发现。这种模式性能更好，但需要在节点上安装额外的软件包。
 
-# application
+**PV&PVC**
 
-在了解完前面的基础内容以后，接下来我们开始通过从应用的角度把前面K8S的知识串起来理解，首先加入我们的目标
+在 Kubernetes (k8s) 中，PersistentVolume (PV) 和 PersistentVolumeClaim (PVC) 是用来管理和使用持久化存储资源的两个重要概念。
 
-## Running with stateful application like mysql (TBD)
+PersistentVolume (PV) 是 Kubernetes 中的一种资源对象，它表示一个存储资源，例如云存储卷或本地磁盘。PV 可以是静态定义的，也可以是动态生成的。静态定义的 PV 在集群创建时就已经存在，而动态生成的 PV 则是根据管理员定义的存储类别动态创建的。
 
-## Running with stateless application like HTTP server (TBD)
+PersistentVolumeClaim (PVC) 是 Kubernetes 中的另一种资源对象，它表示对 PV 的请求。PVC 可以在 Pod 中声明，以请求一个或多个 PV 来存储应用程序的数据。当 Pod 挂载 PVC 时，Kubernetes 会自动将 PVC 绑定到一个可用的 PV 上。
 
-首先假设我们的目标应用是常见的无状态应用开始，无状态应用是指在运行过程中不维护任何会话或状态信息的应用程序，每个请求都是独立的。这意味着应用程序可以随时被复制或迁移到不同的节点，而不会影响应用程序的功能或性能。
+使用 PV 和 PVC 的主要目的是让应用程序在不同的 Pod 和节点之间共享持久化存储。如果应用程序需要在多个 Pod 中共享数据，您可以使用 PVC 来请求一个 PV，并将 PV 挂载到多个 Pod 中。如果 PV 不再需要，您可以删除 PVC，Kubernetes 会释放 PV 并将其返回到可用资源池中。
 
+# 应用
+
+在了解完前面的基础内容以后，接下来我们开始通过从应用的角度把前面K8S的知识串起来理解，首先加入我们的目标是学习如何用k8s运行有状态应用
+
+## 有状态应用-> MySQL
+ MySQL 集群的部署是常见的有状态应用的例子,k8s官方也有响应的文档[运行一个有状态的应用程序](https://kubernetes.io/zh-cn/docs/tasks/run-application/run-replicated-stateful-application/#services),读者ke自行参考。本文将结合图文展开讲解。
+ 
+ 首先在K8S中部署MySQL集群，我们需要考虑以下几个问题：
+
+- MySQL集群应该是一个“主从复制”（Maser-Slave Replication）的加购，只有 1 个主节点（Master），但有多个从节点（Slave）
+- 从节点需要能水平扩展；
+- 所有的写操作，只能在主节点上执行
+- 读操作可以在所有节点上执行。
+
+为了达成上面的的任务，需要用到的k8s 资源对象有 StatefulSet、PV/PVC、ConfigMap、Headless Service、ClusterIP Service.
+
+![](./pics/k8s-mysql-arch.png)
+
+
+通过上面的k8s的资源部署 MySQL集群的具体流程如下：
+
+- 创建一个 PersistentVolume (PV) 对象来存储 MySQL 数据。可以使用已有的存储资源，也可以创建新的存储资源。
+
+- 创建一个 PersistentVolumeClaim (PVC) 对象来请求上一步中创建的 PV。
+
+- 创建一个 ConfigMap 对象来保存 MySQL 的配置信息。
+
+- 创建一个 StatefulSet 对象来运行 MySQL 容器。在这个 StatefulSet 中，需要指定容器镜像、容器端口以及挂载 PV 和 ConfigMap 等配置。
+
+- 创建两个 Service 对象来将 MySQL 容器暴露为 Kubernetes 集群内部或外部的服务，其中一个是名为mysql的 Headless Service, 另一个则是
+mysql-read的普通 Service
+
+下面是对新出现的概念的介绍
+### Headless Service
+
+Headless Service是Kubernetes中的一种服务类型，它与普通服务（ClusterIP）不同的是，Headless Service不会分配一个ClusterIP给Service，而是为每个Service的Endpoint创建DNS记录，使得客户端能够直接访问这些Endpoint。这些Endpoint通常是一个或多个Pod的网络地址，Headless Service将它们公开为一个有序列表。
+
+Headless Service仍是一个标准 Service, 只不过，它的 clusterIP 字段的值 `None`
+与普通服务不同，Headless Service没有ClusterIP和端口号，因此不能使用负载均衡和代理。因此，Headless Service通常需要结合其他服务使用，例如StatefulSet或Service Mesh
+
+下面是对应的Service yaml配置
+```
+# 为 StatefulSet 成员提供稳定的 DNS 表项的无头服务（Headless Service）
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  labels:
+    app: mysql
+    app.kubernetes.io/name: mysql
+spec:
+  ports:
+  - name: mysql
+    port: 3306
+  clusterIP: None
+  selector:
+    app: mysql
+
+# 用于连接到任一 MySQL 实例执行读操作的客户端服务
+# 对于写操作，你必须连接到主服务器：mysql-0.mysql
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-read
+  labels:
+    app: mysql
+    app.kubernetes.io/name: mysql
+    readonly: "true"
+spec:
+  ports:
+  - name: mysql
+    port: 3306
+  selector:
+    app: mysql
+```
+
+
+### StatefulSet
+
+StatefulSet是Kubernetes中的一种控制器对象，它用于管理有状态应用程序的部署和管理。StatefulSet和Deployment不同之处在于，它管理的Pod有固定的标识符，例如名称和网络标识符，这些标识符随着Pod的重启和重新调度而保持不变。
+
+StatefulSet的主要目的是支持有状态的应用程序，例如数据库或集群存储系统。有状态的应用程序通常要求稳定的网络标识符和持久性存储，以确保数据的一致性和可靠性。StatefulSet的工作原理是通过创建一组Pod来管理有状态应用程序，并为每个Pod分配唯一的标识符，例如名称或索引，从而提供稳定的网络标识符和持久性存储。
+
+当一个Pod启动时，StatefulSet会为其分配一个唯一的名称，例如<StatefulSetName>-<Ordinal> ，其中<StatefulSetName>是StatefulSet的名称，<Ordinal>是Pod在StatefulSet中的序号。这些唯一的名称对于有状态应用程序非常重要，因为它们提供了一个固定的标识符，用于识别和访问Pod。
+
+```
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+spec:
+  selector:
+    matchLabels:
+      app: mysql
+      app.kubernetes.io/name: mysql
+  serviceName: mysql
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: mysql
+        app.kubernetes.io/name: mysql
+    spec:
+      initContainers:
+      - name: init-mysql
+        image: mysql:5.7
+        command:
+```
+
+上面的yaml是 [mysql-statefulset.yaml](https://raw.githubusercontent.com/kubernetes/website/main/content/zh-cn/examples/application/mysql/mysql-statefulset.yaml) 的节选， 起结果是 Pods 名为 mysql-0、mysql-1 和 mysql-2。此外需要注意的是这个statefulset多了一个 serviceName=mysql 字段，这个字段的作用，就是告诉 StatefulSet 控制器，在执行控制循环（Control Loop）的时候，请使用 mysql 这个 Headless Service 来保证 Pod 的“可解析身份”。
+
+
+
+
+## 无状态应用  
+
+首先假设我们的目标应用是常见的无状态应用，无状态应用是指在运行过程中不维护任何会话或状态信息的应用程序，每个请求都是独立的。这意味着应用程序可以随时被复制或迁移到不同的节点，而不会影响应用程序的功能或性能。
+
+
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  replicas: 2 # 告知 Deployment 运行 2 个与该模板匹配的 Pod
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+
+
+############################
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+spec:
+  selector:
+    app: nginx
+  ports:
+  - name: default
+    protocol: TCP
+    port: 80
+    targetPort: 80        
+```
+在上面的Service中我使用了 selector 字段来声明这个 Service 只代理携带了 app: nginx 标签的 Pod。并且，这个 Service 的 80 端口，代理的是 Pod 的 80 端口.
+
+需要注意的是，只有处于 Running 状态，且 readinessProbe 检查通过的 Pod，才会出现在 Service 的 Endpoints 列表里。并且，当某一个 Pod 出现问题时，Kubernetes 会自动把它从 Service 里摘除掉。
+### k8s proxy负载均衡实现原理
+
+#### Iptables
+
+```bash
+# kubectl get svc nginx
+NAME                     TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+nginx1   ClusterIP   10.106.224.41   <none>        8080/TCP   163m
+```
+
+此时在Node节点上访问该Service服务，首先流量到达的是OUTPUT链，这里我们只关心nat表的OUTPUT链：
+
+```bash
+# iptables-save -t nat | grep -- '-A OUTPUT'
+-A OUTPUT -m comment --comment "kubernetes service portals" -j KUBE-SERVICES
+```
+
+该链跳转到`KUBE-SERVICES`子链中:
+
+```bash
+# iptables-save -t nat | grep -- '-A KUBE-SERVICES'
+...
+-A KUBE-SERVICES ! -s 10.244.0.0/16 -d 10.106.224.41/32 -p tcp -m comment --comment "default/kubernetes-bootcamp-v1: cluster IP" -m tcp --dport 8080 -j KUBE-MARK-MASQ
+-A KUBE-SERVICES -d 10.106.224.41/32 -p tcp -m comment --comment "default/kubernetes-bootcamp-v1: cluster IP" -m tcp --dport 8080 -j KUBE-SVC-RPP7DHNHMGOIIFDC
+```
+
+我们发现与之相关的有两条规则：
+
+- 第一条负责打标记 MARK`0x4000/0x4000`，后面会用到这个标记。
+- 第二条规则跳到 `KUBE-SVC-RPP7DHNHMGOIIFDC` 子链。
+
+其中 `KUBE-SVC-RPP7DHNHMGOIIFDC` 子链规则如下:
+
+```bash
+# iptables-save -t nat | grep -- '-A KUBE-SVC-RPP7DHNHMGOIIFDC'
+-A KUBE-SVC-RPP7DHNHMGOIIFDC -m statistic --mode random --probability 0.33332999982 -j KUBE-SEP-FTIQ6MSD3LWO5HZX
+-A KUBE-SVC-RPP7DHNHMGOIIFDC -m statistic --mode random --probability 0.50000000000 -j KUBE-SEP-SQBK6CVV7ZCKBTVI
+-A KUBE-SVC-RPP7DHNHMGOIIFDC -j KUBE-SEP-IAZPHGLZVO2SWOVD
+```
+
+- 1/3 的概率跳到子链 `KUBE-SEP-FTIQ6MSD3LWO5HZX`,
+- 剩下概率的 1/2，(1 - 1/3) * 1/2 == 1/3，即 1/3 的概率跳到子链 `KUBE-SEP-SQBK6CVV7ZCKBTVI`，
+- 剩下 1/3 的概率跳到 `KUBE-SEP-IAZPHGLZVO2SWOVD`。
+
+我们查看其中一个子链 `KUBE-SEP-FTIQ6MSD3LWO5HZX`规则:
+
+```bash
+# iptables-save -t nat | grep -- '-A KUBE-SEP-FTIQ6MSD3LWO5HZX'
+...
+-A KUBE-SEP-FTIQ6MSD3LWO5HZX -p tcp -m tcp -j DNAT --to-destination 10.244.1.2:8080
+```
+
+由此可见子链 `KUBE-SVC-RPP7DHNHMGOIIFDC`
+ 的功能就是按照概率均等的原则 DNAT 到其中一个 Endpoint IP，即 Pod IP，假设为 10.244.1.2，
+
+
+### ipvs
+
+```bash
+$ ipvsadm -ln
+IP Virtual Server version 1.2.1 (size=4096)
+Prot LocalAddress:Port Scheduler Flags
+  -> RemoteAddress:Port           Forward Weight ActiveConn InActConn
+TCP  10.0.0.1:443 rr persistent 10800
+  -> 192.168.0.1:6443             Masq    1      1          0
+TCP  10.0.0.10:53 rr
+  -> 172.17.0.2:53                Masq    1      0          0
+UDP  10.0.0.10:53 rr
+  -> 172.17.0.2:53                Masq    1      0          0
+```
 
 # 参考文献
 
@@ -193,3 +426,5 @@ ipvs模式：使用Linux内核的IPVS（IP Virtual Server）技术来实现负�
 - [https://www.weave.works/blog/introduction-to-service-meshes-on-kubernetes-and-progressive-delivery](https://www.weave.works/blog/introduction-to-service-meshes-on-kubernetes-and-progressive-delivery)
 - [https://in4it.io/kubernetes-secrets-management/](https://in4it.io/kubernetes-secrets-management/)
 - [https://arthurchiao.art/blog/cracking-k8s-node-proxy/#2-kubernetes-node-proxy-model](https://arthurchiao.art/blog/cracking-k8s-node-proxy/#2-kubernetes-node-proxy-model)
+- [K8s 应用管理之道 - 有状态服务](https://developer.aliyun.com/article/689685)
+- [Understanding Persistent Volumes and PVCs in Kubernetes & OpenEBS](https://blog.mayadata.io/understanding-persistent-volumes-and-pvcs-in-kubernetes)
