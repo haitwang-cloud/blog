@@ -125,8 +125,6 @@ Deployment是一种管理Pod副本的抽象概念，它可以用来定义一个�
 
 Service 是一种可以提供稳定网络端点的抽象，它可以将一个或多个 Pod 组合成一个服务。Service可以通过标签选择器来选择一组 Pod，并将它们作为一个服务暴露出去，从而让其他应用程序可以通过这个服务来访问这些 Pod。使用SVC，开发人员可以实现应用程序的发现和负载均衡，而无需了解后端 Pod 的具体信息
 
-![](./pics/service.png)
-
 **ConfigMap 和 Secret**
 
 ConfigMap 和 Secret 是 Kubernetes 中用于管理应用配置和敏感数据的资源。ConfigMap 可以管理应用的配置信息，例如数据库地址、端口号等；Secret 可以管理敏感数据，例如密码、API 密钥等。这些资源可以通过环境变量、配置文件、命令行参数等方式注入到应用中
@@ -295,6 +293,7 @@ spec:
 
 上面的yaml是 [mysql-statefulset.yaml](https://raw.githubusercontent.com/kubernetes/website/main/content/zh-cn/examples/application/mysql/mysql-statefulset.yaml) 的节选， 起结果是 Pods 名为 mysql-0、mysql-1 和 mysql-2。此外需要注意的是这个statefulset多了一个 serviceName=mysql 字段，这个字段的作用，就是告诉 StatefulSet 控制器，在执行控制循环（Control Loop）的时候，请使用 mysql 这个 Headless Service 来保证 Pod 的“可解析身份”。
 
+以上就是如何基于 StatefulSet 在 k8s 中部署运维一套高可用 MySQL 服务，但过程相对复杂。对于新手用户很不友好，还需维护一套复杂的管理脚本。为了降低在 k8s 中部署复杂应用的门槛，诞生了 Kubernetes Operator，具体可以参考[mysql-operator-introduction](https://dev.mysql.com/doc/mysql-operator/en/mysql-operator-introduction.html)
 
 
 
@@ -302,7 +301,7 @@ spec:
 
 首先假设我们的目标应用是常见的无状态应用，无状态应用是指在运行过程中不维护任何会话或状态信息的应用程序，每个请求都是独立的。这意味着应用程序可以随时被复制或迁移到不同的节点，而不会影响应用程序的功能或性能。
 
-
+![](./pics/service.png)
 ```
 apiVersion: apps/v1
 kind: Deployment
