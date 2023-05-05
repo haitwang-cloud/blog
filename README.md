@@ -13,6 +13,7 @@
 * [New feature in Go Go 1.18](./Golang/go-version-118-release-new.md)
 * [Effective Error Handling in Golang](./Golang/error-hanlde.md)
 * [Golang Pass by value vs Pass by reference](./Golang/golang-pass-by-value-vs-pass-by-reference.md)
+* [Managing Multiple Go Versions with Go](./Golang/managing-multiple-go-versions-with-go.md)
 
 ### Network
 - [What is BGP? | BGP routing explained](./NetWork/what-is-bgp.md)
