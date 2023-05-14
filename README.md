@@ -17,6 +17,7 @@
 * [Managing Multiple Go Versions with Go](./Golang/managing-multiple-go-versions-with-go.md)
 * [How To Upgrade Golang Dependencies](./Golang/how-to-upgrade-golang-dependencies.md)
 * [How to properly use the conditional variable sync.Cond in Golang](./Golang/go-sync-cond.md)
+* [Tutorial: Getting started with fuzzing](./Golang/go-fuzz-testing.md)
 
 ### Network
 
