@@ -2,7 +2,7 @@
 
 ### Elasticsearch
 
-* [“No Elasticsearch Node Available” for olivere/elastic](./ElasticSearch/olivere/elastic.md)
+* [No Elasticsearch Node Available for olivere/elastic](./ElasticSearch/olivere/elastic.md)
 
 ### Golang
 
@@ -10,12 +10,13 @@
 * [3 ways to compare slices (arrays)](./Golang/compare-slice.md)
 * [The Go init Function](./Golang/the-golang-init-func.md)
 * [go.mod 文件中的Direct和Indirect依赖](./Golang/direct-indirect-dependency-module-go.md)
-* [Go’s sync.Map](./Golang/Go’s-sync-Map.md)
-* [New feature in Go Go 1.18](./Golang/go-version-118-release-new.md)
+* [Golang sync.Map](./Golang/Go-sync-Map.md)
+* [New feature in Go 1.18](./Golang/go-version-118-release-new.md)
 * [Effective Error Handling in Golang](./Golang/error-hanlde.md)
 * [Golang Pass by value vs Pass by reference](./Golang/golang-pass-by-value-vs-pass-by-reference.md)
 * [Managing Multiple Go Versions with Go](./Golang/managing-multiple-go-versions-with-go.md)
 * [How To Upgrade Golang Dependencies](./Golang/how-to-upgrade-golang-dependencies.md)
+* [How to properly use the conditional variable sync.Cond in Golang](./Golang/go-sync-cond.md)
 
 ### Network
 
