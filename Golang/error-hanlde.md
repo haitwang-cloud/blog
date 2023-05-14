@@ -269,11 +269,9 @@ Go 1.13 引入了一种简单的方法来添加这些信息。
 
 ### Errors Are Better Wrapped (更好地包装Errors)
 
-The snippet below is refactored so that is uses `fmt.Errorf` with a `%w` verb to “wrap” errors as they “bubble up” through the other function calls. This adds the context needed so that it’s possible to deduce which of those database operations failed in the previous example.
-
 下面的代码片段使用 `fmt.Errorf` 和 `%w`进行了重构，通过其他函数层层调用来“wrap”错误 。通过添加调用的上下文信息，可以推断出在上一示例中哪些数据库操作失败。
 
-```
+```go
 package main
 
 import (
