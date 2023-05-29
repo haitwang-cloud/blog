@@ -1,51 +1,52 @@
-> 本文是[How to properly use the conditional variable sync.Cond in Golang](https://www.sobyte.net/post/2022-07/go-sync-cond/)的中文翻译版本，内容有删减
+> 本文是 [How to properly use the conditional variable sync.Cond in Golang](https://www.sobyte.net/post/2022-07/go-sync-cond/)的中文翻译版本，内容有删减
 
 
-Cond in Golang’s sync package implements a conditional variable that can be used in scenarios where multiple Readers are waiting for a shared resource ready (if there is only one read and one write, a lock or channel takes care of it).
+Golang sync包中的Cond实现了一个条件变量，可以用在多个Reader等待一个共享资源ready的场景中（如果只有一个读一个写，此时锁或者channel就可以搞定）。
 
-Cond pooling point: multiple goroutines waiting, 1 goroutine notification event occurs.
+Cond pool的点在于：多个goroutine等待，1个goroutine发生事件通知。
 
-Each Cond is associated with a Lock (`*sync.Mutex or *sync.RWMutex`), which must be added when modifying conditions or calling Wait methods, **protecting the condition**.
 
-```
+每一个Cond都关联了一个Lock(`*sync.Mutex or *sync.RWMutex`)，在修改条件或者调用Wait方法时必须加锁，**保护条件**。
+
+```go
 type Cond struct {
         // L is held while observing or changing the condition
         L Locker
         // contains filtered or unexported fields
 }
 ```
-
-```
+创建一个新的Cond条件变量。
+```go
 func NewCond(l Locker) *Cond
 ```
 
-Create a new Cond conditional variable.
 
-```
+
+Broadcast 会唤醒所有等待的goroutine。
+
+同时，Broadcast也可以不加锁调用。
+
+```go
 func (c *Cond) Broadcast()
 ```
 
-Broadcast will wake up **all** goroutines waiting for c.
+Signal只会唤醒一个等待的goroutine。
 
-Broadcast can be called with or without locking.
-
-```
+```go
 func (c *Cond) Signal()
 ```
 
-Signal wakes up only **1** goroutine waiting for c.
+Signal可以不加锁调用，但是如果不加锁调用，那么Signal必须在Wait之前调用，否则会panic。
 
-Signal can be called with or without locking.
+`Wait()` 会自动释放 `c.L` 并挂起调用者的goroutine，`Wait()` 返回时会对 `c.L` 上锁。
 
-`Wait()` automatically releases `c.L` and hangs the caller’s goroutine. execution resumes later, and `Wait()` puts a lock on `c.L` when it returns.
+`Wait()` 不会主动return，除非它被Signal或者Broadcast唤醒。
 
-`Wait()` does not return unless it is woken up by Signal or Broadcast.
+由于 `C.L` 在 `Wait()` 第一次恢复时没有锁定，因此调用者通常不应认为 `Wait()` 返回时条件为真。
 
-Since `C.L` is not locked when `Wait()` first resumes, the caller usually does not assume that the condition is true when Wait returns.
+调用者应该在循环中调用Wait。（简单来说，每当你想使用条件时，都必须加锁。）
 
-Instead, the caller should call Wait in a loop. (Simply put, whenever you want to use a condition, you must add a lock.)
-
-```
+```go
 c.L.Lock()
 for !condition() {
     c.Wait()
@@ -54,11 +55,11 @@ for !condition() {
 c.L.Unlock()
 ```
 
-The following example is a better illustration of how Cond is used.
+下面的例子更好的说明了Cond的使用。
 
 [Playground1](https://play.golang.org/p/g2hyc2yDdJu)
 
-```
+```go
 package main
 
 import (
@@ -110,7 +111,7 @@ func main() {
 }
 ```
 
-The execution results are as follows.
+程序执行结果如下。
 
 ```
 goroutine1 wait
@@ -121,36 +122,135 @@ goroutine2 true
 goroutine1 true
 ```
 
-goroutine1 and goroutine2 enter Wait state, after main goroutine in 2s after the resource is satisfied, after issuing broadcast signal, resume from Wait and determine whether the condition has indeed been satisfied (sharedRsc is not empty), satisfied then consume the condition and unlock, `wg.Done()` .
 
-We make a modification to remove the 2s delay in the main goroutine.
+goroutine1 和 goroutine2 进入 Wait 状态，等待 main goroutine 在2s后资源满足后，发出 broadcast 信号，从 Wait 中恢复，判断条件是否确实满足（sharedRsc不为空），满足则消费条件并解锁，`wg.Done()`。
 
-The code will not be posted.
+接下来，我们对main goroutine中的2s延迟进行了修改。
 
-[Playgroud2](https://play.golang.org/p/9svW4WI4lXK)
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+)
+
+var sharedRsc = false
+
+func main() {
+	var wg sync.WaitGroup
+	wg.Add(2)
+	m := sync.Mutex{}
+	c := sync.NewCond(&m)
+	go func() {
+		// this go routine wait for changes to the sharedRsc
+		c.L.Lock()
+		for sharedRsc == false {
+			fmt.Println("goroutine1 wait")
+			c.Wait()
+		}
+		fmt.Println("goroutine1", sharedRsc)
+		c.L.Unlock()
+		wg.Done()
+	}()
+
+	go func() {
+		// this go routine wait for changes to the sharedRsc
+		c.L.Lock()
+		for sharedRsc == false {
+			fmt.Println("goroutine2 wait")
+			c.Wait()
+		}
+		fmt.Println("goroutine2", sharedRsc)
+		c.L.Unlock()
+		wg.Done()
+	}()
+
+	// this one writes changes to sharedRsc
+	c.L.Lock()
+	fmt.Println("main goroutine ready")
+	sharedRsc = true
+	c.Broadcast()
+	fmt.Println("main goroutine broadcast")
+	c.L.Unlock()
+	wg.Wait()
+}
+```
 
 The execution result is as follows.
 
-```
+程序执行结果如下    
+
+```bash
 main goroutine ready
 main goroutine broadcast
 goroutine2 true
 goroutine1 true
 ```
 
-It is interesting to note that neither goroutine enters the Wait state.
 
-The reason is that the main goroutine executes faster and has already acquired the lock before goroutine1/goroutine2 adds the lock and finishes modifying sharedRsc and signaling Broadcast.
+有趣的是，两个goroutine都没有进入Wait状态。
 
-When the child goroutine checks the condition before calling Wait, the condition is already satisfied, so there is no need to call Wait again.
 
-What if we don’t do checksum in the subgoroutine?
+原因是main goroutine执行的更快，并且在goroutine1/goroutine2添加锁并完成修改sharedRsc和发出广播信号之前已经获取了锁。
 
-[Playground3](https://play.golang.org/p/vtHEVQCm6NC)
+当子goroutine在调用Wait之前检查条件时，条件已经满足，因此无需再次调用Wait。
 
-We would get 1 deadlock.
 
+如果我们不在子goroutine中做检查呢？
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+)
+
+var sharedRsc = false
+
+func main() {
+	var wg sync.WaitGroup
+	wg.Add(2)
+	m := sync.Mutex{}
+	c := sync.NewCond(&m)
+	go func() {
+		// this go routine wait for changes to the sharedRsc
+		c.L.Lock()
+		for sharedRsc == false {
+			fmt.Println("goroutine1 wait")
+			c.Wait()
+		}
+		fmt.Println("goroutine1", sharedRsc)
+		c.L.Unlock()
+		wg.Done()
+	}()
+
+	go func() {
+		// this go routine wait for changes to the sharedRsc
+		c.L.Lock()
+		fmt.Println("goroutine2 wait")
+		c.Wait()
+		fmt.Println("goroutine2", sharedRsc)
+		c.L.Unlock()
+		wg.Done()
+	}()
+
+	// this one writes changes to sharedRsc
+	c.L.Lock()
+	fmt.Println("main goroutine ready")
+	sharedRsc = true
+	c.Broadcast()
+	fmt.Println("main goroutine broadcast")
+	c.L.Unlock()
+	wg.Wait()
+}
 ```
+
+我们会得到1个死锁。
+
+```bash
 main goroutine ready
 main goroutine broadcast
 goroutine2 wait
@@ -178,17 +278,23 @@ created by main.main
     /tmp/sandbox947808816/prog.go:27 +0x140
 ```
 
-Why?
 
-The main goroutine (goroutine 1) executes first and stays in wg.Wait(), waiting for wg.Done() of the child goroutine; while the child goroutine (goroutine 6) calls cond.Wait directly without judging the condition.
+为什么呢？
 
-Wait will release the lock and wait for the other goroutine to call Broadcast or Signal to notify it to resume execution, but there is no other way to resume. But the main goroutine has already called Broadcast and entered the wait state, so no goroutine will rescue the child goroutine that is still in cond. Deadlock.
+主goroutine（goroutine 1）先执行，停留在wg.Wait()，等待子goroutine的wg.Done()；而子goroutine（goroutine 6）直接调用cond.Wait而不判断条件。
 
-Therefore, be sure to note that Broadcast must come after all the Wait (of course, it is possible to decide whether to go into Wait by conditional judgment).
+当主goroutine调用Broadcast时，子goroutine还在cond.Wait中，而主goroutine在wg.Wait中阻塞，所以子goroutine永远不会被解救。
 
-Let’s take a look at the [FIFO](https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/client-go/tools/cache/fifo.go) implemented in k8s using Cond, which How to handle the consumption of conditions.
 
-```
+Wait将释放锁并等待另一个goroutine调用Broadcast或Signal来通知它恢复执行，但没有其他方法可以恢复。但是主goroutine已经调用了Broadcast并进入了等待状态，因此没有goroutine会解救仍在cond中的子goroutine。死锁。
+
+
+因此，务必注意Broadcast必须在所有Wait之后运行（当然，可以通过条件判断是否进入Wait）。
+
+
+我们来看看k8s中使用Cond实现的[FIFO](https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/client-go/tools/cache/fifo.go)，它是如何处理条件的消费的。
+
+```go
 func (f *FIFO) Pop(process PopProcessFunc) (interface{}, error) {
     f.lock.Lock()
     defer f.lock.Unlock()
@@ -220,7 +326,9 @@ func NewFIFO(keyFunc KeyFunc) *FIFO {
 }
 ```
 
-Cond shares the FIFO’s lock, in Pop, it will add lock `f.lock.Lock()` first, and before `f.cond.Wait()`, it will check if `len(f.queue)` is 0 to prevent 2 cases.
 
-1.  as in example 3 above, the condition is satisfied, no need to wait
-2.  The condition is satisfied when waking up, but other goroutines have gotten there first and blocked in the locking of `f.lock`; when the lock is obtained and the locking is successful, `f.queue` has been consumed as empty, and direct access to `f.queue[0]` will be accessed out of bounds.
+Cond共享FIFO的锁，在Pop中，它首先添加锁`f.lock.Lock()`，并在`f.cond.Wait()`之前检查`len(f.queue)`是否为0，以防止2种情况。
+
+
+1.  像来例子3一样，条件已经满足，无需等待
+2.  条件已经满足，但是其他goroutine已经先行并在`f.lock`的锁定中阻塞；当获取锁并且锁定成功时，`f.queue`已被消耗为空，并且直接访问`f.queue[0]`将被访问越界。
