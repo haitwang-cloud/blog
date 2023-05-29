@@ -16,7 +16,7 @@
 * **[译📓]**[Golang Pass by value vs Pass by reference](./Golang/golang-pass-by-value-vs-pass-by-reference.md)
 * **[译📓]**[Managing Multiple Go Versions with Go](./Golang/managing-multiple-go-versions-with-go.md)
 * **[译📓]**[How To Upgrade Golang Dependencies](./Golang/how-to-upgrade-golang-dependencies.md)
-* **[译📓WIP🏗️]**[How to properly use the conditional variable sync.Cond in Golang](./Golang/go-sync-cond.md)
+* **[译📓]**[How to properly use the conditional variable sync.Cond in Golang](./Golang/go-sync-cond.md)
 * **[译📓]**[Tutorial: Getting started with fuzzing](./Golang/go-fuzz-testing.md)
 
 ### Network
