@@ -41,3 +41,4 @@
 * **[译📓]**[Kubernetes headless Service](./kubernetes/headLess-svc.md)
 * **[原创📖]**[从应用开发者的角度来学习K8S](./kubernetes/learning-k8s-by-running-app.md)
 * **[译📓]**[leader-election-in-kubernetes-using-client-go](./kubernetes/leader-election-in-kubernetes-using-client-go.md)
+* **[译📓]**[k8sgpt-localai-unlock-kubernetes-superpowers-for-free](./kubernetes/k8sgpt-operater.md)
