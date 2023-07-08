@@ -1,6 +1,6 @@
 > 本文是 [Golang-Memory-Leaks](https://yuriktech.com/2020/11/07/Golang-Memory-Leaks/) 的中文翻译版本，内容仅供学习参考，如有侵权请联系删除。
 
-其他优秀的 ppof 性能分析文章👍👍👍，请参考 [golang pprof 实战](https://blog.wolfogre.com/posts/go-ppof-practice/)：
+其他优秀的 ppof 性能分析文章👍👍👍，请参考 [golang pprof 实战](https://blog.wolfogre.com/posts/go-ppof-practice/) 和 [你不知道的 Go 之 pprof](https://darjun.github.io/2021/06/09/youdontknowgo/pprof/)：
 
 最近,我在生产环境中遇到了内存泄漏。我发现某个服务在负载内存在稳步上升，直到进程触发内存溢出异常。经过深入调查，我找到了内存泄漏的源头，以及为什么会发生这种情况。为了诊断问题，我使用了Golang的分析工具`pprof`。在本文中，我将解释什么是pprof，并展示我如何诊断内存泄漏。
 
@@ -29,7 +29,7 @@
 
 在开始性能分析之前，我列出了一些我想排除的事情:
 
-* 我正在使用Golang版本1.12.5，所以我想确保潜在的泄漏不是来自运行时(即使运行时也有问题)。可以在github页面上的open issues on the github page](https://github.com/golang/go/issues)得到很好的回答。
+* 我正在使用Golang版本1.12.5，所以我想确保潜在的泄漏不是来自运行时(即使运行时也有问题)。可以在github页面上的[open issues on the github page](https://github.com/golang/go/issues)得到很好的回答。
 *   尝试使用激进的垃圾回收[debug.SetGCPercent(10)](https://golang.org/pkg/runtime/debug/#SetGCPercent)
 *   手动尝试[debug.FreeOSMemory()](https://golang.org/pkg/runtime/debug/#FreeOSMemory)，运行时主要关注性能，在内存进行垃圾回收之后，为了性能考虑，并不会立即将其释放回操作系统
 *   尝试在staging环境中使用小负载测试重现泄漏，以确认我的怀疑。
