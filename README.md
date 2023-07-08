@@ -19,6 +19,7 @@
 * **[译📓]**[How to properly use the conditional variable sync.Cond in Golang](./Golang/go-sync-cond.md)
 * **[译📓]**[Tutorial: Getting started with fuzzing](./Golang/go-fuzz-testing.md)
 * **[译📓]**[Table-driven-unit-tests](./Golang/Table-driven-unit-tests.md)
+* **[译📓]**[Golang-Memory-Leaks](./Golang/Golang-Memory-Leaks.md)
 
 ### Network
 
