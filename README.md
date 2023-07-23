@@ -46,3 +46,4 @@
 * **[译📓]**[k8sgpt-localai-unlock-kubernetes-superpowers-for-free](./kubernetes/k8sgpt-operater.md)
 * **[原创📖]** [K8S的Endpoints和EndpointSlice的利弊对比](./kubernetes/k8s-svc-endpoint-slice.md)
 * **[译📓]**[Rate Limiting in controller-runtime and client-go](./kubernetes/controller-runtime-client-go-rate-limiting.md)
+* **[译📓]**[An introduction to Go Kubernetes' informers](./kubernetes/k8s_informers.md)
