@@ -1,10 +1,20 @@
 # haitwang-cloud blog
 
-### Elasticsearch
+🌠欢迎来到haitwang-cloud博客🌠,
+这里有作者在各技术领域的学习心得🧠
+包括:
+- 💻 Elasticsearch
+- 🌈 Golang
+- 📡 网络技术
+- ⚙️ 软件开发
+- 🤖 Kubernetes
+  
+**加入我的技术探索之旅✈️,保持对技术世界的热爱与求知欲!💕**
+## Elasticsearch 🐘
 
 * **[原创📖]**[No Elasticsearch Node Available for olivere/elastic](./ElasticSearch/olivere/elastic.md)
 
-### Golang
+## Golang 🐹
 
 * **[译📓]**[Why use TestMain for testing in Go?](./Golang/TestMain.md)
 * **[译📓]**[3 ways to compare slices (arrays)](./Golang/compare-slice.md)
@@ -22,22 +32,20 @@
 * **[译📓]**[Golang-Memory-Leaks](./Golang/Golang-Memory-Leaks.md)
 * **[译📓]**[LeakProf: Featherlight In-Production Goroutine Leak Detection](./Golang/leakprof-featherlight-in-production-goroutine-leak-detection.md)
 
-### Network
+## Network 🌐
 
 * **[译📓]**[What is BGP? | BGP routing explained](./NetWork/what-is-bgp.md)
-
 * **[译📓]**[How to use ipset Command in Linux](./NetWork/how-to-use-ipset-command-in-linux.md)
 * **[译📓]**[The Road to QUIC](./NetWork/the-road-to-quic.md)
 * **[译📓]**[Tcpdump and Wireshark on OSX](./NetWork/tcp-dump-in-OSX.md)
 
-### Software Development
-
+## Software Development 🛠️
 * **[译📓]**[软件开发中的上游和下游](./SoftwareEngineering/Upstream%3Adownstream/upstream-downstream.md)
 * **[译📓]**[JSON Patch and JSON Merge Patch](./SoftwareEngineering/json-patch-vs-merge-patch.md)
 * **[译📓]**[Just in Time Compilation](./SoftwareEngineering/just-in-time-compilation-explained.md)
 * **[译📓]**[How To Build Docker Images For Apple Silicon (Aka M1 Chip)](./SoftwareEngineering/docker-build-on-m1-mac.md)
 
-### Kubernetes
+## Kubernetes ⚙️
 
 * **[译📓]**[K3s Vs K8s: What’s The Difference? (And When To Use Each)](./kubernetes/k8s-vs-k3s.md)
 * **[译📓]**[Kubernetes headless Service](./kubernetes/headLess-svc.md)
@@ -48,3 +56,4 @@
 * **[译📓]**[Rate Limiting in controller-runtime and client-go](./kubernetes/controller-runtime-client-go-rate-limiting.md)
 * **[译📓]**[An introduction to Go Kubernetes' informers](./kubernetes/k8s_informers.md)
 * **[原创📖]** [k8s **Affinity与 taint/toleration的区别解释**](./kubernetes/diff-of-Affinity-and-taint.md)
+* **[原创📖]** [k8s默认的调度器工作机制和策略](./kubernetes/k8s-schedule-road-path.md)
