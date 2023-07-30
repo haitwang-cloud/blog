@@ -47,3 +47,4 @@
 * **[原创📖]** [K8S的Endpoints和EndpointSlice的利弊对比](./kubernetes/k8s-svc-endpoint-slice.md)
 * **[译📓]**[Rate Limiting in controller-runtime and client-go](./kubernetes/controller-runtime-client-go-rate-limiting.md)
 * **[译📓]**[An introduction to Go Kubernetes' informers](./kubernetes/k8s_informers.md)
+* **[原创📖]** [k8s **Affinity与 taint/toleration的区别解释**](./kubernetes/diff-of-Affinity-and-taint.md)
