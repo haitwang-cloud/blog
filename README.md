@@ -57,3 +57,4 @@
 * **[译📓]**[An introduction to Go Kubernetes' informers](./kubernetes/k8s_informers.md)
 * **[原创📖]** [k8s **Affinity与 taint/toleration的区别解释**](./kubernetes/diff-of-Affinity-and-taint.md)
 * **[原创📖]** [k8s默认的调度器工作机制和策略](./kubernetes/k8s-schedule-road-path.md)
+* **[原创📖]** [通过 k8s Cloud-Provider 来学习如何设计一个 Controller](./kubernetes/k8s-cloud-provider.md)
