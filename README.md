@@ -59,3 +59,4 @@
 * **[原创📖]** [k8s **Affinity与 taint/toleration的区别解释**](./kubernetes/diff-of-Affinity-and-taint.md)
 * **[原创📖]** [k8s默认的调度器工作机制和策略](./kubernetes/k8s-schedule-road-path.md)
 * **[原创📖]** [通过 k8s Cloud-Provider 来学习如何设计一个 Controller](./kubernetes/k8s-cloud-provider.md)
+* **[译📓]** [Using The Helm Tpl Function To Refer Values In Values Files](./kubernetes/using-the-helm-tpl-function-to-refer-values-in-values-files.md)
