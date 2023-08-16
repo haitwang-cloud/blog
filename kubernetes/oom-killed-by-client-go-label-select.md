@@ -1,4 +1,3 @@
-#k8s/client-go
 # Client-go 中的label selector 引起的 **CPU Throttling**问题
 
 ## 前序
@@ -120,7 +119,7 @@ type Store interface {
 
 ## Throttling  解决过程
 通过比较Pod和allocation对象，我发现它们之间有一个交叉字段，即IP。因此，可以通过IP将这两个对象关联起来。由于 client-go提供了 添加了自定义 `AddIndexers`的功能，具体可查看[An introduction to Go Kubernetes' informers](https://github.com/haitwang-cloud/blog/blob/main/kubernetes/k8s_informers.md#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88--informers) 我们可以通过自定义`Indexers`来加快访问速度，比如下面是一个通过pod的IP而不是name和nameSpace来获取pod的例子
-#### index函数定义
+### Pod AddIndexers例子
 ```go
 // arbitrary unique name for the new indexer
 const ByIP = "IndexByIP"
@@ -139,12 +138,12 @@ func podIPIndexFunc(obj interface{}) ([]string, error) {
 }
 ```
 
-##### 给informeer添加indexer
+#### 给informeer添加indexer
 ```go
 podsInformer.AddIndexers(map[string]cache.IndexFunc{ByIP: podIPIndexFunc})
 ```
 
-##### 通过给pod的IP来获取pod
+#### 通过给pod的IP来获取pod
 ```go
 items, err := podsInformer.GetIndexer().ByIndex(ByIP, ip)
 ```
@@ -157,6 +156,7 @@ const (
 	Slash32SubnetSize = 32
 )
 
+### 实现IpamIndexByIPFunc
 func IpamInexByIPFunc(obj interface{}) ([]string, error) {
 	alloc, ok := obj.(*ipamv1.Allocation)
 	if !ok {
@@ -191,6 +191,19 @@ func (p *TLBProvider) lockAllocationForPods(pods []v1.Pod, service *v1.Service) 
 alloc:=allocationInformer.Informer().GetIndexer().ByIndex(common.IpamIndexByIP, pod.Status.PodIP)
 
 ```
+上述方案需要注意的是，通过`AddIndexers`添加索引会带来一定的内存消耗。每个索引都需要占用一定的内存空间来存储索引数据结构。索引的内存消耗随着索引的数量、索引字段的数量和索引数据量的增加而增加。在决定是否使用索引时，应该权衡查询性能的提升和额外内存消耗之间的关系，以确保整体系统的性能和可用性。
+### 测试结果
+
+![](./pics/after-fix.jpg)
+
+上图是才用了上面的`AddIndexers`方法后，tlb-service-controller的CPU使用率。我们可以看到，CPU使用率已经稳定在了1~4左右，和之前的40相比的话，性能提升了10倍以上。验证了我们的`IpamIndexByIP`修复是正确的。同时我们看到内存使用率的没有明显变化，这证明我们通过`AddIndexers`来通过空间换时间的方法，并不会带来额外的内存消耗。
 
 ## 总结
 本文介绍了在Kubernetes中处理CPU Throttling问题的过程。通过使用自定义indexer，加速了对象的访问速度，从而避免了大量的CPU密集型操作，有效提升了系统性能。此次经历让我更深入理解了client-go的使用，以及如何在Kubernetes中解决性能问题。
+
+## 参考文章
+- [client-go：Indexer 源码分析](https://andblog.cn/3181) 
+- [An introduction to Go Kubernetes' informers](https://github.com/haitwang-cloud/blog/blob/main/kubernetes/k8s_informers.md#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88--informers)
+- [index_test.go
+](https://github.com/kubernetes/client-go/blob/b8a03ab933ab332affa308e107cac58ccc6f40f4/tools/cache/index_test.go)
+- [shared_informer.go](https://github.com/kubernetes/client-go/blob/b8a03ab933ab332affa308e107cac58ccc6f40f4/tools/cache/shared_informer.go#L541)
