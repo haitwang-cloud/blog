@@ -82,8 +82,6 @@ env:
 ## Tpl安全性顾虑
 ---------------------------
 
-Keep in mind that tpl is used to render any user input as a template, and can be used for use cases other than simply referencing other Helm values. Consider your user provides the following values file:
-
 请记住，`tpl`函数用于将输入渲染为模板，同时也可以用于除了简单引用其他Helm值之外的场景。考虑一下，您的用户提供了以下的values文件：
 
 ```yaml
