@@ -6,7 +6,7 @@
 大多数workload不需要每个 GPU 的全部内存和计算资源。因此，将一个 GPU 在多个进程之间共享对于提高 GPU 利用率和降低基础设施成本至关重要。
 
 
-在 Kubernetes 中，可以通过将单个 GPU 公开为多个资源（即切片），每个切片具有特定的内存和计算大小，这些资源可以由单个容器请求来实现。通过为每个容器创建所需大小的 GPU 切片，您可以释放集群中的资源。这些资源可用于调度附加的 Pod，或允许您减少集群中的节点数。无论哪种方式，在进程之间共享 GPU 都可以帮助您降低基础设施成本。
+在 Kubernetes 中，可以通过将单个 GPU 公开为多个资源（即切片），每个切片具有特定的内存和计算大小，这些资源可以由单个容器请求来实现。通过为每个容器只创建所需的 GPU 切片，您可以释放集群中富余的GPU资源。这些资源可用于调度更多的 Pod，或允许您减少集群中的GPU节点数。无论哪种方式，在进程之间共享 GPU 都可以帮助您降低基础设施成本。
 
 Kubernetes 中的 GPU 支持由 [NVIDIA Kubernetes Device Plugin](https://github.com/NVIDIA/k8s-device-plugin) 提供，该插件目前仅支持两种 GPU 共享策略：时间切片和多实例 GPU（MIG,Multi-Instance GPU）。但是，还有一种 GPU 共享策略，它平衡了时间切片和 MIG 的优缺点：多进程服务 [**Multi-Process Service (MPS)**](https://docs.nvidia.com/deploy/mps/index.html)。尽管 MPS 不受 NVIDIA Device Plugin 支持，但在 Kubernetes 中使用它仍然可行。
 
@@ -21,7 +21,7 @@ Kubernetes 中的 GPU 支持由 [NVIDIA Kubernetes Device Plugin](https://github
 
 #### **Time slicing**
 
-时间切片是一种机制，它允许在过载的 GPU 上相互交错地运行工作负载。时间切片利用 GPU 时间切片调度程序，该调度程序通过**时间共享**并发执行多个 CUDA 进程。
+时间切片是一种机制，它允许在繁忙的 GPU 上交错地运行用户的workload。时间切片主要是调用GPU 时间切片调度程序，该调度程序通过**时间共享**并发执行多个 CUDA 进程。
 
 当启用时间切片时，GPU 会通过在一定时间间隔内在进程之间切换，以公平共享的方式在不同进程之间共享其计算资源。这会产生与连续上下文切换相关的计算时间开销，这会转化为抖动和更高的延迟。
 
@@ -49,7 +49,7 @@ sharing:
 
 这些独立的 GPU 切片被称为 MIG 设备，并且它们采用一种格式命名，该格式指示了设备的计算和内存资源。例如，2g.20gb 对应于具有 20 GB 内存的 GPU 切片。
 
-MIG 不允许创建自定义大小和数量的 GPU 切片，因为每个 GPU 型号仅支持一组[特定的 MIG 配置](https://docs.nvidia.com/datacenter/tesla/mig-user-guide/#supported-profiles)。这降低了您对 GPU 进行分区的粒度。此外，MIG 设备必须根据特定的[放置规则](https://docs.nvidia.com/datacenter/tesla/mig-user-guide/#partitioning)进行创建，这进一步限制了使用的灵活性。
+MIG 不允许创建自定义大小和数量的 GPU 切片，因为每个 GPU 型号仅支持一组[特定的 MIG 配置](https://docs.nvidia.com/datacenter/tesla/mig-user-guide/#supported-profiles)。这降低了您对 GPU 进行分区的粒度。此外，MIG 设备必须根据特定的[规则](https://docs.nvidia.com/datacenter/tesla/mig-user-guide/#partitioning)进行创建，这进一步限制了使用的灵活性。
 > MIG 是在进程之间提供最高级别隔离的 GPU 共享方法。然而，它缺乏灵活性，并且仅与少数 GPU 架构（Ampere 和 Hopper）兼容。
 
 您可以使用 [nvidia-smi](https://developer.nvidia.com/nvidia-system-management-interface) 命令行界面手动创建和删除 MIG 设备，也可以使用 [NVML](https://developer.nvidia.com/nvidia-management-library-nvml) 进行编程方式操作。然后，NVIDIA 设备插件通过 [不同的命名策略](https://docs.google.com/document/d/1mdgMQ8g7WmaI_XVVRrCvHPFPOMCm5LQD5JefgAh6N8g/edit#bookmark=id.vj44q8ogvavv) 将这些设备作为 Kubernetes 资源公开。例如，使用 `mixed` 策略，设备 `1g.10gb` 会被公开为 `nvidia.com/mig-1g.10gb`。而策略 `single` 则将设备公开为通用的 `nvidia.com/gpu` 资源。
@@ -90,7 +90,7 @@ data:
 
 多进程服务（Multi-Process Service，简称 MPS）是CUDA应用编程接口（API）的客户端-服务器实现，用于在同一GPU上并发运行多个进程。
 
-服务器管理GPU访问，为客户端提供并发性。客户端通过客户端运行时连接到服务器，该运行时内置于CUDA驱动库中，并且可以由任何CUDA应用程序透明地使用。
+服务器管理GPU访问，为客户端提供并发性。客户端通过客户端运行时连接到服务器，该运行时内置于CUDA驱动库中，并且可以由任何CUDA应用程序透明地调用。
 
 > MPS 几乎与所有现代 GPU 兼容，并提供了最高的灵活性，允许创建具有可分配内存量和可用计算能力的任意限制的 GPU 切片。然而，它不强制在进程之间实现完全的内存隔离。在大多数情况下，MPS 在 MIG 和时间分片之间表示了一个很好的折衷方案。
 
