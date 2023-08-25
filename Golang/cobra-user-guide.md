@@ -1,4 +1,5 @@
-> 本文是[cobra的readme](https://github.com/spf13/cobra/blob/main/site/content/user_guide.md)的中文翻译版本
+> 本文是[cobra的官方readme](https://github.com/spf13/cobra/blob/main/site/content/user_guide.md)的中文翻译版本
+
 # 用户指南
 
 当你想要用cobra来构建自己的应用时，你可以按照下面的结构来组织你的cobra应用：
@@ -43,9 +44,10 @@ Cobra-CLI 是一个独立的程序，它将创建您的应用程序并添加您�
 
 ### 创建rootCmd
 
-Cobra doesn't require any special constructors. Simply create your commands.
 
-Ideally you place this in app/cmd/root.go:
+Cobra 不需要任何特殊的构造函数。只需创建命令即可。
+
+您可以把下面的内容放在 app/cmd/root.go 中。
 
 ```go
 var rootCmd = &cobra.Command{
@@ -66,10 +68,10 @@ func Execute() {
   }
 }
 ```
+您还将在 `init()` 函数中定义`flag`和对应的处理函数。
 
-You will additionally define flags and handle configuration in your init() function.
+例如，在 `cmd/root.go` 文件中可以这样写：
 
-For example cmd/root.go:
 
 ```go
 package cmd
@@ -140,12 +142,11 @@ func initConfig() {
 }
 ```
 
-### Create your main.go
+### 创建你的main.go文件
 
-With the root command you need to have your main function execute it.
-Execute should be run on the root for clarity, though it can be called on any command.
+你需要在你的main函数中执行root命令。为了清晰起见，应该在root上执行Execute（其实它可以在任何命令上执行）。
 
-In a Cobra app, typically the main.go file is very bare. It serves one purpose: to initialize Cobra.
+在一个Cobra应用中，通常main.go文件非常简单，它只有一个目的：初始化Cobra。
 
 ```go
 package main
@@ -159,13 +160,14 @@ func main() {
 }
 ```
 
-### Create additional commands
+### 创建其他命令
 
-Additional commands can be defined and typically are each given their own file
-inside of the cmd/ directory.
+> 您可以在cmd/目录下的文件中单独定义和创建其他命令。
 
-If you wanted to create a version command you would create cmd/version.go and
-populate it with the following:
+
+
+如果你想创建一个version命令，你可以创建cmd/version.go文件，并写上以下内容：
+
 
 ```go
 package cmd
@@ -190,14 +192,10 @@ var versionCmd = &cobra.Command{
 }
 ```
 
-### Organizing subcommands
+### 添加子命令
+一个命令可以有子命令，子命令也可以有其他子命令。这可以通过使用 `AddCommand` 来实现。在某些情况下，尤其是在较大的应用程序中，每个子命令可能定义在自己的 Go 包中。
 
-A command may have subcommands which in turn may have other subcommands. This is achieved by using
-`AddCommand`. In some cases, especially in larger applications, each subcommand may be defined in
-its own go package.
-
-The suggested approach is for the parent command to use `AddCommand` to add its most immediate
-subcommands. For example, consider the following directory structure:
+建议的方法是父命令使用 `AddCommand` 来添加其最直接的子命令。例如，考虑以下目录结构：
 
 ```text
 ├── cmd
@@ -211,19 +209,18 @@ subcommands. For example, consider the following directory structure:
 └── main.go
 ```
 
-In this case:
+在这种情况下：
 
-* The `init` function of `root.go` adds the command defined in `sub1.go` to the root command.
-* The `init` function of `sub1.go` adds the command defined in `sub2.go` to the sub1 command.
-* The `init` function of `sub2.go` adds the commands defined in `leafA.go` and `leafB.go` to the
-  sub2 command.
+* `root.go`的`init`函数将`sub1.go`中定义的命令添加到root命令。
+* `sub1.go`的`init`函数将`sub2.go`中定义的命令添加到sub1命令。
+* `sub2.go`的`init`函数将`leafA.go`和`leafB.go`中定义的命令添加到sub2命令。
 
-This approach ensures the subcommands are always included at compile time while avoiding cyclic
-references.
+这个方法确保了子命令在编译时被包含进来，同时避免了循环引用的发生。
 
-### Returning and handling errors
+### 返回和处理错误
 
 If you wish to return an error to the caller of a command, `RunE` can be used.
+如果您想将错误返回给命令的调用方，可以使用 `RunE`。
 
 ```go
 package cmd
@@ -249,49 +246,45 @@ var tryCmd = &cobra.Command{
   },
 }
 ```
+上面的错误可以在执行函数调用时被捕获。
 
-The error can then be caught at the execute function call.
 
-## Working with Flags
+## 使用flag Flags
 
-Flags provide modifiers to control how the action command operates.
 
-### Assign flags to a command
+Flags 提供了修改器来控制命令的操作。
 
-Since the flags are defined and used in different locations, we need to
-define a variable outside with the correct scope to assign the flag to
-work with.
+### 在命令中使用flag
+由于flag是在不同的位置定义和使用的，因此我们需要在外部定义一个变量，来为它分配flag进行操作。
+
 
 ```go
 var Verbose bool
 var Source string
 ```
 
-There are two different approaches to assign a flag.
+有两种不同的方法来使用一个flag。
 
-### Persistent Flags
+### 全局flag（持久化flag）
 
-A flag can be 'persistent', meaning that this flag will be available to the
-command it's assigned to as well as every command under that command. For
-global flags, assign a flag as a persistent flag on the root.
+一个flag可以是“永久的”，这意味着该flag将对它所分配的命令以及该命令下的所有命令都有效。对于全局flag，请在root命令上将flag分配为永久flag。
+
 
 ```go
 rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
 ```
 
-### Local Flags
+### 局部flag
 
-A flag can also be assigned locally, which will only apply to that specific command.
+一个flag也可以被分配为局部flag，这将只适用于该特定命令。
 
 ```go
 localCmd.Flags().StringVarP(&Source, "source", "s", "", "Source directory to read from")
 ```
 
-### Local Flag on Parent Commands
+### 从父命令中获取局部flag
 
-By default, Cobra only parses local flags on the target command, and any local flags on
-parent commands are ignored. By enabling `Command.TraverseChildren`, Cobra will
-parse local flags on each command before executing the target command.
+默认情况下，Cobra只解析命令上的本地flag，父命令上的任何本地flag都会被忽略。通过启用 `Command.TraverseChildren`，Cobra将在执行目标命令之前解析每个命令上的本地flag。
 
 ```go
 command := cobra.Command{
@@ -300,9 +293,10 @@ command := cobra.Command{
 }
 ```
 
-### Bind Flags with Config
+### 使用config绑定flag
 
-You can also bind your flags with [viper](https://github.com/spf13/viper):
+You can also bind your flags with [viper](https://github.com/spf13/viper): 您也可以使用[viper](https://github.com/spf13/viper)来绑定您的flag：
+
 ```go
 var author string
 
@@ -312,47 +306,44 @@ func init() {
 }
 ```
 
-In this example, the persistent flag `author` is bound with `viper`.
-**Note**: the variable `author` will not be set to the value from config,
-when the `--author` flag is provided by user.
+在本例中，永久flag `author` 使用 `viper` 绑定。
+> 注意：当用户提供 `--author` 标志时，变量 `author` 将不会被设置为配置文件中的值
 
-More in [viper documentation](https://github.com/spf13/viper#working-with-flags).
+详情可以参考[viper文档](https://github.com/spf13/viper#working-with-flags).
 
-### Required flags
+### 必需的flag
 
-Flags are optional by default. If instead you wish your command to report an error
-when a flag has not been set, mark it as required:
+默认情况下，flag是可选的。如果您希望您的命令在flag未设置时报告错误，可以将其标记为必需的：
+
 ```go
 rootCmd.Flags().StringVarP(&Region, "region", "r", "", "AWS region (required)")
 rootCmd.MarkFlagRequired("region")
 ```
+或者，对于持久flag：
 
-Or, for persistent flags:
 ```go
 rootCmd.PersistentFlags().StringVarP(&Region, "region", "r", "", "AWS region (required)")
 rootCmd.MarkPersistentFlagRequired("region")
 ```
 
-### Flag Groups
+### Flag 组
+如果你有不同的flag必须一起使用（例如，如果用户提供了 `--username` flag，他们必须同时提供 `--password` flag），那么Cobra可以通过下面的方式来做：
 
-If you have different flags that must be provided together (e.g. if they provide the `--username` flag they MUST provide the `--password` flag as well) then
-Cobra can enforce that requirement:
 ```go
 rootCmd.Flags().StringVarP(&u, "username", "u", "", "Username (required if password is set)")
 rootCmd.Flags().StringVarP(&pw, "password", "p", "", "Password (required if username is set)")
 rootCmd.MarkFlagsRequiredTogether("username", "password")
 ```
 
-You can also prevent different flags from being provided together if they represent mutually
-exclusive options such as specifying an output format as either `--json` or `--yaml` but never both:
+如果不同的flag代表互斥的选项，你可以这样做。例如指定一个输出格式为 `--json` 或 `--yaml`，但从不同时使用：
 ```go
 rootCmd.Flags().BoolVar(&ofJson, "json", false, "Output in JSON")
 rootCmd.Flags().BoolVar(&ofYaml, "yaml", false, "Output in YAML")
 rootCmd.MarkFlagsMutuallyExclusive("json", "yaml")
 ```
 
-If you want to require at least one flag from a group to be present, you can use `MarkFlagsOneRequired`.
-This can be combined with `MarkFlagsMutuallyExclusive` to enforce exactly one flag from a given group:
+如果你想要至少一个flag必须存在，你可以使用 `MarkFlagsOneRequired`。这可以与 `MarkFlagsMutuallyExclusive` 结合使用，以强制执行给定组中的一个flag：
+
 ```go
 rootCmd.Flags().BoolVar(&ofJson, "json", false, "Output in JSON")
 rootCmd.Flags().BoolVar(&ofYaml, "yaml", false, "Output in YAML")
@@ -360,33 +351,29 @@ rootCmd.MarkFlagsOneRequired("json", "yaml")
 rootCmd.MarkFlagsMutuallyExclusive("json", "yaml")
 ```
 
-In these cases:
-  - both local and persistent flags can be used
-    - **NOTE:** the group is only enforced on commands where every flag is defined
-  - a flag may appear in multiple groups
-  - a group may contain any number of flags
+>在这些情况下：
+>  - 本地和持久flag都可以使用
+>    - **注意：**该组仅在定义了每个flag的命令上强制执行
+>  - 一个flag可以出现在多个组中
+>  - 一个组可以包含任意数量的flag
 
-## Positional and Custom Arguments
+## 潜在的参数和自定义的参数
+潜在参数的验证可以使用`Command`的`Args`字段来指定。
+以下验证器是内置的：
+- 参数的数量：
+  - `NoArgs` - 如果有任何位置参数，则报告错误。
+  - `ArbitraryArgs` - 接受任意数量的参数。
+  - `MinimumNArgs(int)` - 如果提供的位置参数少于N个，则报告错误。
+  - `MaximumNArgs(int)` - 如果提供的位置参数多于N个，则报告错误。
+  - `ExactArgs(int)` - 如果位置参数不是N个，则报告错误。
+  - `RangeArgs(min, max)` - 如果参数的数量不在`min`和`max`之间，则报告错误。
 
-Validation of positional arguments can be specified using the `Args` field of `Command`.
-The following validators are built in:
 
-- Number of arguments:
-  - `NoArgs` - report an error if there are any positional args.
-  - `ArbitraryArgs` - accept any number of args.
-  - `MinimumNArgs(int)` - report an error if less than N positional args are provided.
-  - `MaximumNArgs(int)` - report an error if more than N positional args are provided.
-  - `ExactArgs(int)` - report an error if there are not exactly N positional args.
-  - `RangeArgs(min, max)` - report an error if the number of args is not between `min` and `max`.
-- Content of the arguments:
-  - `OnlyValidArgs` - report an error if there are any positional args not specified in the `ValidArgs` field of `Command`, which can optionally be set to a list of valid values for positional args.
+如果`Args`未定义或为`nil`，则默认为`ArbitraryArgs`。
 
-If `Args` is undefined or `nil`, it defaults to `ArbitraryArgs`.
+此外，`MatchAll(pargs ...PositionalArgs)` 允许将现有检查与任意其他检查组合。
+例如，如果您想在没有确切的 N 个位置参数时报告错误，或在任何位置参数不在 `Command` 的 `ValidArgs` 字段中时报告错误，您可以调用 `MatchAll` 方法，并将 `ExactArgs` 和 `OnlyValidArgs` 方法作为参数传递
 
-Moreover, `MatchAll(pargs ...PositionalArgs)` enables combining existing checks with arbitrary other checks.
-For instance, if you want to report an error if there are not exactly N positional args OR if there are any positional
-args that are not in the `ValidArgs` field of `Command`, you can call `MatchAll` on `ExactArgs` and `OnlyValidArgs`, as
-shown below:
 
 ```go
 var cmd = &cobra.Command{
@@ -398,8 +385,8 @@ var cmd = &cobra.Command{
 }
 ```
 
-It is possible to set any custom validator that satisfies `func(cmd *cobra.Command, args []string) error`.
-For example:
+可以设置任何满足以下签名的自定义验证器：
+例如
 
 ```go
 var cmd = &cobra.Command{
@@ -421,16 +408,13 @@ var cmd = &cobra.Command{
 }
 ```
 
-## Example
+## Example 例子
 
-In the example below, we have defined three commands. Two are at the top level
-and one (cmdTimes) is a child of one of the top commands. In this case the root
-is not executable, meaning that a subcommand is required. This is accomplished
-by not providing a 'Run' for the 'rootCmd'.
+在下面的例子中，我们定义了三个命令。两个在顶层，一个（cmdTimes）是顶级命令之一的子命令。在这种情况下，根命令不可执行，这意味着需要子命令。这是通过不为 `rootCmd` 提供 `Run` 方法来实现的。
 
-We have only defined one flag for a single command.
+我们只为单个命令定义了一个标志。
 
-More documentation about flags is available at https://github.com/spf13/pflag
+有关标志的更多文档可在 https://github.com/spf13/pflag 上找到
 
 ```go
 package main
@@ -489,21 +473,19 @@ a count and a string.`,
 }
 ```
 
-For a more complete example of a larger application, please checkout [Hugo](https://gohugo.io/).
+如果你想要一个更完整的例子，可以看看[Hugo](https://gohugo.io/)。
 
-## Help Command
+## Help 命令
 
-Cobra automatically adds a help command to your application when you have subcommands.
-This will be called when a user runs 'app help'. Additionally, help will also
-support all other commands as input. Say, for instance, you have a command called
-'create' without any additional configuration; Cobra will work when 'app help
-create' is called.  Every command will automatically have the '--help' flag added.
 
-### Example
+Cobra 会自动在你的应用程序中添加一个 help 命令，当用户运行 `app help`时会调用它。此外，help 还支持所有其他命令作为输入。例如，假设你有一个名为 create 的命令，没有任何其他配置；当调用 `app help create`时，Cobra 将会正常工作。每个命令都会自动添加 `--help` 标志。
 
-The following output is automatically generated by Cobra. Nothing beyond the
-command and flag definitions are needed.
 
+### 例子
+
+
+下面的输出是由Cobra自动生成的。除了命令和flag定义之外，不需要任何其他内容。
+```shell
     $ cobra-cli help
 
     Cobra is a CLI library for Go that empowers applications.
@@ -528,40 +510,35 @@ command and flag definitions are needed.
 
     Use "cobra-cli [command] --help" for more information about a command.
 
+```
+Help 只是一个像其他命令一样的命令。它没有特殊的逻辑或行为。事实上，如果你想的话，你可以提供你自己的help。
 
-Help is just a command like any other. There is no special logic or behavior
-around it. In fact, you can provide your own if you want.
+### Help中的命令分组
 
-### Grouping commands in help
+Cobra 支持在帮助输出中对可用命令进行分组。要对命令进行分组，每个组都必须显式定义，使用 `AddGroup()` 方法在父命令上。然后，可以使用该子命令的 `GroupID` 元素将子命令添加到组中。
 
-Cobra supports grouping of available commands in the help output.  To group commands, each group must be explicitly
-defined using `AddGroup()` on the parent command.  Then a subcommand can be added to a group using the `GroupID` element
-of that subcommand. The groups will appear in the help output in the same order as they are defined using different
-calls to `AddGroup()`.  If you use the generated `help` or `completion` commands, you can set their group ids using
-`SetHelpCommandGroupId()` and `SetCompletionCommandGroupId()` on the root command, respectively.
+这些组将在帮助输出中以与使用不同 `AddGroup()` 调用定义的顺序相同的顺序出现。
 
-### Defining your own help
+如果您使用生成的 `help` 或 `completion` 命令，则可以使用 `SetHelpCommandGroupId()` 和 `SetCompletionCommandGroupId()` 方法分别在根命令上设置它们的组 ID。
 
-You can provide your own Help command or your own template for the default command to use
-with the following functions:
+### 定义你自己的help
+
+你可以使用以下函数调用你自己的 Help 命令或你自己的模板，供默认命令使用：
 
 ```go
 cmd.SetHelpCommand(cmd *Command)
 cmd.SetHelpFunc(f func(*Command, []string))
 cmd.SetHelpTemplate(s string)
 ```
+后两个也将应用于任何子命令。
 
-The latter two will also apply to any children commands.
+## 用法信息
 
-## Usage Message
+当用户提供无效的flag或无效的命令时，Cobra会通过显示用户的“用法”来做出响应。
 
-When the user provides an invalid flag or invalid command, Cobra responds by
-showing the user the 'usage'.
+### 例子
 
-### Example
-You may recognize this from the help above. That's because the default help
-embeds the usage as part of its output.
-
+```shell
     $ cobra-cli --invalid
     Error: unknown flag: --invalid
     Usage:
@@ -581,26 +558,26 @@ embeds the usage as part of its output.
           --viper            use Viper for configuration
 
     Use "cobra [command] --help" for more information about a command.
+```
+### 自定义用法
 
-### Defining your own usage
-You can provide your own usage function or template for Cobra to use.
-Like help, the function and template are overridable through public methods:
+你可以为Cobra提供自己的用法函数或模板。与help一样，函数和模板可以通过公共方法进行覆盖：
 
 ```go
 cmd.SetUsageFunc(f func(*Command) error)
 cmd.SetUsageTemplate(s string)
 ```
 
-## Version Flag
+## 版本Flag
 
-Cobra adds a top-level '--version' flag if the Version field is set on the root command.
-Running an application with the '--version' flag will print the version to stdout using
-the version template. The template can be customized using the
-`cmd.SetVersionTemplate(s string)` function.
+Cobra 会在根命令上设置 Version 字段时添加一个全局标志 `--version`。
 
-## PreRun and PostRun Hooks
+使用 `--version` 标志运行应用程序将使用版本模板将版本打印到标准输出。可以使用 `cmd.SetVersionTemplate(s string)` 函数自定义模板。
 
-It is possible to run functions before or after the main `Run` function of your command. The `PersistentPreRun` and `PreRun` functions will be executed before `Run`. `PersistentPostRun` and `PostRun` will be executed after `Run`.  The `Persistent*Run` functions will be inherited by children if they do not declare their own.  These functions are run in the following order:
+
+## PreRun 和 PostRun 钩子 
+
+可以运行函数在你的命令的主 `Run` 函数之前或之后。`PersistentPreRun` 和 `PreRun` 函数将在 `Run` 之前执行。`PersistentPostRun` 和 `PostRun` 函数将在 `Run` 之后执行。如果子命令没有声明自己的，则 `Persistent*Run` 函数将被继承。这些函数按照以下顺序运行
 
 - `PersistentPreRun`
 - `PreRun`
@@ -608,7 +585,7 @@ It is possible to run functions before or after the main `Run` function of your 
 - `PostRun`
 - `PersistentPostRun`
 
-An example of two commands which use all of these features is below.  When the subcommand is executed, it will run the root command's `PersistentPreRun` but not the root command's `PersistentPostRun`:
+下面是两个命令的例子，它们使用了所有这些特性。当执行子命令时，它将运行根命令的 `PersistentPreRun`，但不会运行根命令的 `PersistentPostRun`：
 
 ```go
 package main
@@ -683,11 +660,11 @@ Inside subCmd PostRun with args: [arg1 arg2]
 Inside subCmd PersistentPostRun with args: [arg1 arg2]
 ```
 
-## Suggestions when "unknown command" happens
+##  当发生“未知命令”时的提示
 
-Cobra will print automatic suggestions when "unknown command" errors happen. This allows Cobra to behave similarly to the `git` command when a typo happens. For example:
+Cobra在发生“未知命令”错误时会打印自动建议。这使得Cobra在发生拼写错误时的行为类似于`git`命令。例如：
 
-```
+```shell
 $ hugo srever
 Error: unknown command "srever" for "hugo"
 
@@ -697,15 +674,15 @@ Did you mean this?
 Run 'hugo --help' for usage.
 ```
 
-Suggestions are automatically generated based on existing subcommands and use an implementation of [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance). Every registered command that matches a minimum distance of 2 (ignoring case) will be displayed as a suggestion.
+提示是基于现有的子命令自动生成的，并使用[Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance)的实现。每个注册的命令，如果匹配的最小距离为2（忽略大小写），将被显示为一个提示。
 
-If you need to disable suggestions or tweak the string distance in your command, use:
+如果您需要在命令中禁用建议或调整字符串距离，请使用：
 
 ```go
 command.DisableSuggestions = true
 ```
 
-or
+或者
 
 ```go
 command.SuggestionsMinimumDistance = 1
@@ -714,7 +691,10 @@ command.SuggestionsMinimumDistance = 1
 You can also explicitly set names for which a given command will be suggested using the `SuggestFor` attribute. This allows suggestions for strings that are not close in terms of string distance, but make sense in your set of commands but for which
 you don't want aliases. Example:
 
-```
+你可以使用 `SuggestFor` 属性显式地设置命令将被建议的名称。这允许为在字符串距离方面不接近但在命令集中有意义的字符串提供建议，例如：
+
+
+```shell
 $ kubectl remove
 Error: unknown command "remove" for "kubectl"
 
@@ -723,20 +703,3 @@ Did you mean this?
 
 Run 'kubectl help' for usage.
 ```
-
-## Generating documentation for your command
-
-Cobra can generate documentation based on subcommands, flags, etc.
-Read more about it in the [docs generation documentation](docgen/_index.md).
-
-## Generating shell completions
-
-Cobra can generate a shell-completion file for the following shells: bash, zsh, fish, PowerShell.
-If you add more information to your commands, these completions can be amazingly powerful and flexible.
-Read more about it in [Shell Completions](completions/_index.md).
-
-## Providing Active Help
-
-Cobra makes use of the shell-completion system to define a framework allowing you to provide Active Help to your users.
-Active Help are messages (hints, warnings, etc) printed as the program is being used.
-Read more about it in [Active Help](active_help.md).

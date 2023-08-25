@@ -32,6 +32,7 @@
 * **[译📓]** [Golang-Memory-Leaks](./Golang/Golang-Memory-Leaks.md)
 * **[译📓]** [LeakProf: Featherlight In-Production Goroutine Leak Detection](./Golang/leakprof-featherlight-in-production-goroutine-leak-detection.md)
 * **[译📓]** [Getting started with Go plugin package](./Golang/getting-started-with-golang-plugins.md)
+* **[译📓]** [Cobra使用指南](./Golang/cobra-user-guide.md)
 
 ## Network 🌐
 
