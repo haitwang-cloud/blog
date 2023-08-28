@@ -16,7 +16,7 @@
 当我接到告警电话☎️时，发现当前 tlb-service-controller 的 CPU 限制设置为 10。最初认为是由于 controller 需要协调的对象太多，导致其无法正常工作。为了暂时解决问题，我将 CPU 限制从 10 增加到 20。然而，即使增加到 20，依然存在**CPU Throttling**的情况，于是我将 CPU 再次增加到 40。这样 tlb-service-controller 的 CPU 使用率稳定下来，上下游用户暂时不受影响。接下来，我将查找导致当前问题的原因
 ![](./pics/before-fix.jpg)
 
-上图是在Prometheus上查看的当前tlb-service-controller在CPU扩容后的CPU和内存分布图。我们可以得出结论，**CPU使用率在短短的10分钟内迅速上升至约33**，怀疑是代码存在bug，某些程序占用了大量内存资源，而系统无法为其分配更多内存，从而导致CPU限制。
+上图是在Prometheus上查看的当前tlb-service-controller在CPU扩容后的CPU和内存分布图。我们可以得出结论，**CPU使用率在短短的10分钟内迅速上升至约33**，这表明，CPU使用率可能出现了异常。需要进一步调查才能确定原因。
 
 #### pprof 排查CPU 使用率罪魁祸首
 
@@ -46,9 +46,10 @@ func (p *TLBProvider) lockAllocationForPods(pods []v1.Pod, service *v1.Service) 
 
 #### client-go 中的cache提供的源码分析
 
-根据我之前的了解，在Kubernetes中，标签选择器（labelSelector）是一种强大的机制，用于从一组对象中选择一部分。同时，client-go是Kubernetes官方提供的Go客户端，而标签选择器（labelSelector）是client-go中的一个重要功能。client-go的cache是一种本地缓存，用于存储Kubernetes API响应的对象。缓存的主要作用是提高应用程序性能，通过避免每次访问Kubernetes API，从而减少网络延迟和请求负载，缓存可以提高应用程序的效率。
+client-go 是 Kubernetes 官方提供的 Go 客户端，它提供了丰富的功能，用于操作 Kubernetes API。标签选择器（labelSelector）是 client-go 中的一个重要功能，它可以用于通过标签选择器来过滤 Kubernetes API 响应的对象。client-go 的 cache 是基于 store 实现的。store 提供对 Kubernetes API 对象的访问和操作的统一接口。cache 依赖于 store 来获取 Kubernetes API 对象。
 
-client-go的cache的ListAll()函数为什么会导致CPU Throttling呢？为了解决这个问题，我决定查看源代码。
+**client-go的cache为什么会导致ListAll()函数的 CPU Throttling？为了解决这个问题，我决定查看pprof提示的ListAll()函数的源代码**。
+
 ```go
 func ListAll(store Store, selector labels.Selector, appendFn AppendFunc) error {
 	selectAll := selector.Empty()
@@ -76,7 +77,7 @@ func ListAll(store Store, selector labels.Selector, appendFn AppendFunc) error {
 - 如果给定的selector为空，则跳过标签匹配操作并将对象附加到列表中
 - 否则，通过元数据访问器(meta.Accessor)，获取对象的元数据，然后将对象的标签转换为标签集，并将该集合与selector进行匹配。如果对象的标签匹配给定的selector，则添加该对象到列表中。
 
-> client-go的Store是client-go提供了一种抽象的对象缓存机制。在使用client-go时，用户通常首先创建一个Store，并通过它与API Server进行交互，以获得最新的对象状态。下一步，可以使用Watcher等工具从API Server监听对象状态的更改，并将这些更改更新到Store中，以保持其最新状态并进行缓存。这可以极大地提高应用程序的效率，避免向API Server频繁发起资源查询请求。
+> client-go 的 Store 是 client-go 提供的一种抽象的对象缓存机制。它提供了对 Kubernetes API 对象的访问和操作的统一接口。Store 依赖于 store 接口来实现，store 接口定义了 Store 的基本操作，如 List()、Get()、Update() 和 Delete() 等。Store 可以用于存储 Kubernetes API 对象的状态。应用程序可以使用 Store 来获取 Kubernetes API 对象，并监听对象状态的更改。Store 可以提高应用程序的性能，避免频繁地向 Kubernetes API Server 发送请求。
 
 ```Go
 // Store is a generic object storage interface. Reflector knows how to watch a server
@@ -115,7 +116,7 @@ type Store interface {
 (base)  ~/ k get allocation -A | wc
   145457  436371 15367879
 ```
-原来有约1.45万个allocation对象。根据前面的代码，对于每个pod，都需要遍历这1.45万个allocation对象。假设每个K8s的service下有100个pod，而每个cluster仅有10个这样的K8s service，操作次数将达到1450万次。这些操作都需要在CPU中执行，直接使得该函数成为CPU密集型操作，进而导致了CPU限制。更复杂的情况是，每个cluster的service数量远远超过10个，所以CPU使用率出现了Throttling。
+原来有约14.5万个allocation对象。根据前面的代码，对于每个pod，都需要遍历这14.5万个allocation对象。假设每个K8s的service下有100个pod，而每个cluster仅有10个这样的K8s service，操作次数将达到1.45亿次。这些操作都需要在CPU中执行，直接使得该函数成为CPU密集型操作，进而导致了CPU限制。更复杂的情况是，每个cluster的service数量远远超过10个，所以CPU使用率出现了Throttling。
 
 ## Throttling  解决过程
 通过比较Pod和allocation对象，我发现它们之间有一个交叉字段，即IP。因此，可以通过IP将这两个对象关联起来。由于 client-go提供了 添加了自定义 `AddIndexers`的功能，具体可查看[An introduction to Go Kubernetes' informers](https://github.com/haitwang-cloud/blog/blob/main/kubernetes/k8s_informers.md#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88--informers) 我们可以通过自定义`Indexers`来加快访问速度，比如下面是一个通过pod的IP而不是name和nameSpace来获取pod的例子
