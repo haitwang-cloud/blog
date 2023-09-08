@@ -2,7 +2,9 @@
 
 ## 前序
 
-最近，我作为团队的值班人员，接到关于公司内部 tlb-service-controller 的告警电话。快速查看后发现问题是 **CPU Throttling**** 导致 tlb-service-controller 重启。以下是对问题的排查过程和解决方案的记录。
+Kubernetes是目前最流行的容器编排工具之一，提供了丰富的功能，用于管理和部署容器应用程序。在Kubernetes中，使用client-go来与Kubernetes API进行交互。client-go提供了简单易用的API，帮助用户轻松操作Kubernetes集群。然而，在使用client-go时，我们也需要注意性能方面的问题。具体来说，client-go中的`cache ListAll()` 函数可能会触发CPU密集型操作。本文记录了我们如何排查和解决了tlb-service-contrller的**CPU Throttling**问题，旨在为同行提供思考和借鉴的经验。
+
+最近，我作为eBay内部Cloud网络团队的值班人员， 日常工作是处理团队维护的各种 Kubernetes的控制器（controller的）和服务的健康状态的实时警报。当出现故障、性能问题或安全问题时，立即响应并采取必要的措施来解决问题。在最近的值班中，我接到关于公司内部 tlb-service-controller 的告警电话，快速查看后发现问题是 `CPU Throttling` 导致 tlb-service-controller 重启。以下是对问题的排查过程和解决方案的记录。在这篇文章中，我将分享我处理这一技术挑战的经验和所得的教训，以便给同行提供有益的思考和指导。
 
 ## **CPU Throttling** **问题排查**
 #### 收到告警电话，扩容CPU
