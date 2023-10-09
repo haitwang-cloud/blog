@@ -40,6 +40,7 @@
 * **[译📓]** [How to use ipset Command in Linux](./NetWork/how-to-use-ipset-command-in-linux.md)
 * **[译📓]** [The Road to QUIC](./NetWork/the-road-to-quic.md)
 * **[译📓]** [Tcpdump and Wireshark on OSX](./NetWork/tcp-dump-in-OSX.md)
+* **[译📓]** [The Difference in Root Certificates vs Intermediate Certificates](./NetWork/root-certificates-intermediate.md)
 
 ## Software Development 🛠️
 * **[译📓]** [软件开发中的上游和下游](./SoftwareEngineering/Upstream%3Adownstream/upstream-downstream.md)
