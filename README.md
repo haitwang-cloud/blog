@@ -64,3 +64,4 @@
 * **[译📓]** [Using The Helm Tpl Function To Refer Values In Values Files](./kubernetes/using-the-helm-tpl-function-to-refer-values-in-values-files.md)
 * **[原创📖]** [Client-go 中的label selector 引起的 **CPU Throttling**问题](./kubernetes/oom-killed-by-client-go-label-select.md)
 * **[译📓]** [How to Increase GPU Utilization in Kubernetes with NVIDIA MPS](./kubernetes/how-to-increase-gpu-utilization-in-kubernetes.md)
+* **[译📓]** [Understanding Kubernetes controllers part II – object stores and indexers](./kubernetes/object-stores-and-indexers.md)
