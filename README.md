@@ -41,6 +41,7 @@
 * **[译📓]** [The Road to QUIC](./NetWork/the-road-to-quic.md)
 * **[译📓]** [Tcpdump and Wireshark on OSX](./NetWork/tcp-dump-in-OSX.md)
 * **[译📓]** [The Difference in Root Certificates vs Intermediate Certificates](./NetWork/root-certificates-intermediate.md)
+* **[译📓]** [How to debug Istio Upstream Reset 502 UPE (old 503 UC)](./NetWork/how-to-debug-istio-upstream-reset.md)
 
 ## Software Development 🛠️
 * **[译📓]** [软件开发中的上游和下游](./SoftwareEngineering/Upstream%3Adownstream/upstream-downstream.md)
