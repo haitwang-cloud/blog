@@ -67,3 +67,4 @@
 * **[译📓]** [How to Increase GPU Utilization in Kubernetes with NVIDIA MPS](./kubernetes/how-to-increase-gpu-utilization-in-kubernetes.md)
 * **[译📓]** [Understanding Kubernetes controllers part II – object stores and indexers](./kubernetes/object-stores-and-indexers.md)
 * **[译📓]** [Introducing Bare Metal Kubernetes: what you need to know](./kubernetes/introducing-bare-metal-kubernetes-what-you-need-to-know.md)
+* **[译📓]** [How to install NVIDIA GPU Operator with A100 on Kubernetes base Rocky linux](./kubernetes/how-to-install-nvidia-gpu-operator-with-a100-on-kubernetes-base-rocky-linux.md)
