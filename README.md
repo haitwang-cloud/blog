@@ -42,6 +42,7 @@
 * **[译📓]** [Tcpdump and Wireshark on OSX](./NetWork/tcp-dump-in-OSX.md)
 * **[译📓]** [The Difference in Root Certificates vs Intermediate Certificates](./NetWork/root-certificates-intermediate.md)
 * **[译📓]** [How to debug Istio Upstream Reset 502 UPE (old 503 UC)](./NetWork/how-to-debug-istio-upstream-reset.md)
+* **[原创📖]** [How to install multi istio control plane in one k8s cluster](./NetWork/how-to-install-multi-istio-control-plane.md)
 
 ## Software Development 🛠️
 * **[译📓]** [软件开发中的上游和下游](./SoftwareEngineering/Upstream%3Adownstream/upstream-downstream.md)
