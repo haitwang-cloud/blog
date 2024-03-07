@@ -1,4 +1,4 @@
-# How to install multi istio control plane in one k8s cluster
+# 如何在同一个k8s cluster中安装多个istio版本
 ![](./pics/single-cluster-multiple-istiods.svg)
 ### 准备工作
 首先我们创建两个NameSpace`istio-canary` & `istio-prod`,分别用于部署istio的canary版本和prod版本，然后我们给这两个NameSpace打上标签，用于后续的istio的版本选择。
