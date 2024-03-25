@@ -1,19 +1,11 @@
-> 本文由 [简悦 SimpRead](http://ksria.com/simpread/) 转码， 原文地址 [medium.com](https://medium.com/bumble-tech/gpu-powered-kubernetes-clusters-7fc6505125c)
+> 本文是[GPU-powered Kubernetes clusters](https://medium.com/bumble-tech/gpu-powered-kubernetes-clusters-7fc6505125c)的中文翻译版本，内容有删减
 
 > A comprehensive and incremental hands-on guide
 
 A comprehensive and incremental hands-on guide
 ----------------------------------------------
 
-[
-
-![][img-0]
-
-](https://medium.com/@punkerpunker?source=post_page-----7fc6505125c--------------------------------)[
-
-![][img-1]
-
-](https://medium.com/bumble-tech?source=post_page-----7fc6505125c--------------------------------)![][img-2]
+![][img-2]
 
 *   [Why GPUs?](#98ff)  
     1. [GPU Serving](#2708)  
@@ -32,7 +24,7 @@ GPUs (graphics processing units) are specialized hardware devices that are desig
 Kubernetes is an open-source platform for managing containerised applications. Kubernetes allows you to deploy, scale, and manage containerised applications in a consistent and efficient manner. Recently it started to provide support for graphics cards, granting a convenient and transparent way to schedule GPU resources for ML workloads.
 
 At BumbleTech, we’ve created a GPU-powered Kubernetes cluster to schedule ML workloads (such as model training) and perform fast real-time inference.
-
+## Why GPUs?
 While CPUs can process many general tasks in a fast, sequential manner, GPUs use parallel computing to break down massively complex problems into multiple smaller, simultaneous calculations. This makes them ideal for handling the distributed computational processes required for machine learning. Outcomes are better because a huge number of processing units can take calculations in parallel. For example, an NVIDIA A100 GPU has 6,912 CUDA cores which can run calculation tasks simultaneously. In most cases, it would cost more to set-up CPU based infrastructure that achieves the same parallel performance (a single workstation CPU usually has no more than 128 cores).
 
 GPUs are a great fit to improve model performance and reduce inference latency.

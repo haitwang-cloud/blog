@@ -1,4 +1,4 @@
-> 本文由[How to Increase GPU Utilization in Kubernetes with NVIDIA MPS](https://towardsdatascience.com/how-to-increase-gpu-utilization-in-kubernetes-with-nvidia-mps-e680d20c3181)的中文翻译版本，内容有删减
+> 本文是[How to Increase GPU Utilization in Kubernetes with NVIDIA MPS](https://towardsdatascience.com/how-to-increase-gpu-utilization-in-kubernetes-with-nvidia-mps-e680d20c3181)的中文翻译版本，内容有删减
 
 > 本文主要介绍在 Kubernetes 中集成 NVIDIA 多进程服务（MPS,Multi-Process Service），以在工作负载之间共享 GPU，以最大化利用率并降低基础设施成本。
 
