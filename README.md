@@ -5,6 +5,7 @@
 包括:
 - 💻 Elasticsearch
 - 🌈 Golang
+- 🎮 GPU
 - 📡 网络技术
 - ⚙️ 软件开发
 - 🤖 Kubernetes
@@ -14,7 +15,7 @@
 
 * **[原创📖]** [No Elasticsearch Node Available for olivere/elastic](./ElasticSearch/olivere/elastic.md)
 
-## GPU 🎮 & K8s ☸️
+## GPU 🎮
 * **[译📓]** [如何在基于 Rocky Linux 的 Kubernetes 上安装带有 A100 的 NVIDIA GPU Operator](./GPU/how-to-install-nvidia-gpu-operator-with-a100-on-kubernetes-base-rocky-linux.md)
 * **[译📓]** [如何使用 NVIDIA MPS 提高 Kubernetes 中的 GPU 利用率](./GPU/how-to-increase-gpu-utilization-in-kubernetes.md)
 * **[译📓]** [如何解决"Failed to initialize NVML: Unknown Error"](./GPU/failed-to-initialize-nvml-unknow-error.md)

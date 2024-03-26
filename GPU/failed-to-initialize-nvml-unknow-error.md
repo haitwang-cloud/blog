@@ -230,9 +230,7 @@ sudo nvidia-ctk system create-dev-symlinks \
 
 #### k8s-device-plugin
 
-For deployments using the standalone k8s-device-plugin (i.e. not through the use of the operator), installation of a udev rule as described in the previous section can be made to work around this issue. Be sure to pass the correct {{NVIDIA_DRIVER_ROOT}} in cases where the driver container is also in use.
-
-对于直接使用k8s-device-plugin的部署（即不通过`GPU Operator`使用），可以安装如上一节所述的`udev`规则来解决此问题。在驱动程序容器也在使用的情况下，请确保传递正确的`{{NVIDIA_DRIVER_ROOT}}`。
+对于直接使用k8s-device-plugin的场景来说（即不通过`GPU Operator`使用），你可以安装如上一节所述的`udev`规则来解决此问题。。如果你使用了container来安装driver的话，请请确保传递正确的`{{NVIDIA_DRIVER_ROOT}}`。详情请参考[configuration-option-details in k8s-device-plugin](https://github.com/NVIDIA/k8s-device-plugin?tab=readme-ov-file#configuration-option-details)
 
 #### 在`containerd`或`cri-o`隐式地禁用`systemd cgroup`
 
